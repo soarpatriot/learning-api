@@ -1,0 +1,27 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# IDE/editor folders
+.vscode/
+
+# GitHub Copilot and workflow instructions
+.github/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
