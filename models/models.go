@@ -1,4 +1,4 @@
-package main
+package models
 
 // Topic represents a topic entity
 type Topic struct {

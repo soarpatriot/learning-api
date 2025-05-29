@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"fmt"
+	"learning-api/models"
+	"learning-api/routes"
 )
 
 func getDSN() string {
@@ -33,23 +35,23 @@ func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&Topic{}, &Question{}, &Answer{})
+	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{})
 
 	// Insert example data if tables are empty
 	var count int64
-	db.Model(&Topic{}).Count(&count)
+	db.Model(&models.Topic{}).Count(&count)
 	if count == 0 {
-		topic := Topic{Name: "Go Basics", Description: "Learn Go basics", Explaination: "Covers variables, loops, etc."}
+		topic := models.Topic{Name: "Go Basics", Description: "Learn Go basics", Explaination: "Covers variables, loops, etc."}
 		db.Create(&topic)
-		question := Question{Content: "What is a goroutine?", Weight: 1, TopicID: topic.ID}
+		question := models.Question{Content: "What is a goroutine?", Weight: 1, TopicID: topic.ID}
 		db.Create(&question)
-		answer1 := Answer{Content: "A lightweight thread managed by Go runtime", Correct: true, QuestionID: question.ID}
-		answer2 := Answer{Content: "A type of variable", Correct: false, QuestionID: question.ID}
+		answer1 := models.Answer{Content: "A lightweight thread managed by Go runtime", Correct: true, QuestionID: question.ID}
+		answer2 := models.Answer{Content: "A type of variable", Correct: false, QuestionID: question.ID}
 		db.Create(&answer1)
 		db.Create(&answer2)
 	}
 
 	r := gin.Default()
-	RegisterRoutes(r, db)
+	routes.RegisterRoutes(r, db)
 	r.Run()
 }
