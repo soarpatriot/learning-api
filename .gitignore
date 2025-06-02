@@ -17,7 +17,7 @@
 .vscode/
 
 # GitHub Copilot and workflow instructions
-.github/
+
 
 # OS generated files
 .DS_Store
