@@ -1,36 +1,29 @@
 package main
 
 import (
+	"fmt"
+	"learning-api/config"
+	"learning-api/models"
+	"learning-api/routes"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"os"
-	"fmt"
-	"learning-api/models"
-	"learning-api/routes"
 )
 
-func getDSN() string {
-	user := os.Getenv("MYSQL_USER")
-	pass := os.Getenv("MYSQL_PASSWORD")
-	host := os.Getenv("MYSQL_HOST")
-	db := os.Getenv("MYSQL_DB")
-	if user == "" { user = "root" }
-	if pass == "" { pass = "22143521" }
-	if host == "" { host = "127.0.0.1:3306" }
-	if db == "" { db = "learning" }
-	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, db)
+func getDSN(cfg config.Config) string {
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.MySQLUser, cfg.MySQLPassword, cfg.MySQLHost, cfg.MySQLDB)
 }
 
 func main() {
-	profile := os.Getenv("PROFILE")
-	if profile == "" { profile = "dev" }
-	if profile == "dev" {
+	cfg := config.LoadConfig()
+	if cfg.Profile == "dev" {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	dsn := getDSN()
+	dsn := getDSN(cfg)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")

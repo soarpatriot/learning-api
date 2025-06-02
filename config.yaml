@@ -1,0 +1,13 @@
+dev:
+  profile: dev
+  mysql_user: root
+  mysql_password: ""
+  mysql_host: 127.0.0.1:3306
+  mysql_db: learning
+
+production:
+  profile: production
+  mysql_user: produser
+  mysql_password: ""
+  mysql_host: prodhost:3306
+  mysql_db: prodlearning
