@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{})
+	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{}, &models.User{}, &models.Token{})
 
 	// Insert example data if tables are empty
 	var count int64

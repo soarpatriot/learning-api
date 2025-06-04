@@ -1,9 +1,10 @@
 package routes
 
 import (
+	"learning-api/handlers"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"learning-api/handlers"
 )
 
 func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
@@ -26,4 +27,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
 	r.DELETE("/answers/:id", func(c *gin.Context) { handlers.DeleteAnswer(c, db) })
 
 	r.GET("/topics/:id/questions-answers", func(c *gin.Context) { handlers.GetQuestionsWithAnswers(c, db) })
+
+	r.POST("/token", handlers.PostToken)
 }
