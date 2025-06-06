@@ -12,6 +12,9 @@ type Config struct {
 	MySQLPassword string `yaml:"mysql_password"`
 	MySQLHost     string `yaml:"mysql_host"`
 	MySQLDB       string `yaml:"mysql_db"`
+	ApiKey        string `yaml:"api_key"`
+	ApiSecret     string `yaml:"api_secret"`
+	AppID         string `yaml:"app_id"`
 }
 
 type yamlConfig struct {
@@ -23,7 +26,11 @@ func LoadConfig() Config {
 	profile := getEnv("PROFILE", "dev")
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
-		panic("failed to read config.yaml: " + err.Error())
+		// Try parent directory (for tests run from subfolders)
+		data, err = os.ReadFile("../config.yaml")
+		if err != nil {
+			panic("failed to read config.yaml: " + err.Error())
+		}
 	}
 	var yc yamlConfig
 	err = yaml.Unmarshal(data, &yc)
@@ -51,7 +58,17 @@ func LoadConfig() Config {
 	if v := os.Getenv("MYSQL_DB"); v != "" {
 		cfg.MySQLDB = v
 	}
-	// Debug output
+	// config api key and secret
+	if v := os.Getenv("API_KEY"); v != "" {
+		cfg.ApiKey = v
+	}
+	if v := os.Getenv("API_SECRET"); v != "" {
+		cfg.ApiSecret = v
+	}
+	if v := os.Getenv("APP_ID"); v != "" {
+		cfg.AppID = v
+	}
+
 	return cfg
 }
 

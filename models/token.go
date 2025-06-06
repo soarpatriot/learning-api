@@ -1,9 +1,9 @@
 package models
 
 import (
-	"crypto/rand"
-	"encoding/base64"
+	"errors"
 	"fmt"
+	"learning-api/config"
 	"time"
 
 	credential "github.com/bytedance/douyin-openapi-credential-go/client"
@@ -26,108 +26,139 @@ type Token struct {
 	UpdatedAt             time.Time `json:"updated_at"`
 }
 
-// gen_jwt_access_token generates a JWT access token for the user with a given secret and expiration duration.
-func (t *Token) GenJWTAccessToken(secret string, expiresIn time.Duration) (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": t.UserID,
-		"exp":     time.Now().Add(expiresIn).Unix(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+// DouyinClient interface for testability
+type DouyinClient interface {
+	V2Jscode2session(req *openApiSdkClient.V2Jscode2sessionRequest) (*openApiSdkClient.V2Jscode2sessionResponse, error)
 }
 
-// gen_refresh_token generates a secure random refresh token string.
-func (t *Token) GenRefreshToken(length int) (string, error) {
-	b := make([]byte, length)
-	_, err := rand.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(b), nil
+// generateSdkClientFunc returns a DouyinClient (for production or test)
+var generateSdkClientFunc = func() (DouyinClient, error) {
+	return generateSdkClient()
 }
 
-// Define V2Jscode2sessionResponse according to the expected SDK response structure
-type V2Jscode2sessionResponse struct {
-	// Add fields as per the actual response structure
-	OpenID     string `json:"open_id"`
-	SessionKey string `json:"session_key"`
-	ErrCode    int    `json:"err_code"`
-	ErrMsg     string `json:"err_msg"`
-}
-
-func generate_sdk_client() (*openApiSdkClient.Client, error) {
-	// 初始化SDK client
+func generateSdkClient() (DouyinClient, error) {
+	config := fetchConfig()
+	apiKey := config.ApiSecret
+	apiSecret := config.ApiKey
 	opt := new(credential.Config).
-		SetClientKey("tt******"). // 改成自己的app_id
-		SetClientSecret("cbs***") // 改成自己的secret
+		SetClientKey(apiKey).
+		SetClientSecret(apiSecret)
 	return openApiSdkClient.NewClient(opt)
 }
 
+func fetchConfig() config.Config {
+	// Load the configuration from the config package
+	return config.LoadConfig()
+}
+
 func Jscode2session(code string) (string, error) {
-	// 初始化SDK client
-	sdkClient, err := generate_sdk_client()
+	sdkClient, err := generateSdkClientFunc()
 	if err != nil {
 		return "", err
 	}
-
-	user := temp_user()
-	token := generate_a_token("83Soi1UKQ6", user.ID)
-	sdkRequest := construct_session_request(code, "tt4233**", "83Soi1UKQ6")
+	config := fetchConfig()
+	sdkRequest := constructSessionRequest(code, config.AppID, config.ApiSecret)
 
 	// sdk调用
 	sdkResponse, err := sdkClient.V2Jscode2session(sdkRequest)
 	if err != nil && sdkResponse.ErrNo != nil && *sdkResponse.ErrNo != 0 {
 		fmt.Println("sdk call err:", err, " response:", sdkResponse)
-		db.Delete(&user) // Clean up the temporary user if there's an error
 		return "", err
 	}
-	user.OpenID = *sdkResponse.Data.Openid
-	user.UnionID = *sdkResponse.Data.Unionid
-	user.SessionKey = *sdkResponse.Data.SessionKey
-	db.Save(user)     // Update the user in the database
-	db.Create(&token) // Save the token to the database
+	token, err := findOrCreateUserToken(sdkResponse.Data)
+	if err != nil {
+		fmt.Println("Error finding or creating user token:", err)
+		return "", err
+	}
 	return token.AccessToken, nil
 }
 
-func construct_session_request(code string, appid string, secret string) *openApiSdkClient.V2Jscode2sessionRequest {
+func constructSessionRequest(code string, appid string, secret string) *openApiSdkClient.V2Jscode2sessionRequest {
 	sdkRequest := &openApiSdkClient.V2Jscode2sessionRequest{}
 
 	sdkRequest.SetAppid(appid)
 	sdkRequest.SetCode(code)
 	sdkRequest.SetSecret(secret)
 
-	// sdkRequest.AccessToken = accessToken // Removed: no such field in SDK struct
 	return sdkRequest
 }
 
-func temp_user() *User {
-	// Create a temporary user for testing purposes
-	// generate a user and save it to the database
-	user := &User{
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+func findOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (token *Token, err error) {
+
+	var user *User
+	result := db.Where("open_id = ?", data.Openid).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// User not found, use your custom method to create a new one
+			user, err = createNewUserWithToken(data)
+			if err != nil {
+				return nil, err
+			}
+			return &user.Tokens[0], nil // Return the newly created token
+		} else {
+			return nil, result.Error
+		}
+	} else {
+		// user found, update the user updated_at and session key
+
+		token = generateToken(*data.Openid)
+		user.Tokens = []Token{*token}
+		user.SessionKey = *data.SessionKey
+		user.UpdatedAt = time.Now()
+		if err := db.Save(&user).Error; err != nil {
+			return nil, err
+		}
 	}
-	if db != nil {
-		db.Create(&user)
-	}
-	return user
+	return token, nil
 }
 
-func generate_a_token(secret string, userID uint) *Token {
-
-	// Save user to the database (omitted for brevity)
-
-	token := &Token{
-		UserID:    userID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-
-		AccessTokenExpiresIn: 3600,
-
-		RefreshTokenExpiresIn: 7200,
+func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (*User, error) {
+	user := &User{
+		OpenID:     *data.Openid,
+		UnionID:    *data.Unionid,
+		SessionKey: *data.SessionKey,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
-	token.AccessToken, _ = token.GenJWTAccessToken(secret, time.Hour)
-	token.RefreshToken, _ = token.GenRefreshToken(32)
 
+	token := generateToken(*data.Openid)
+	user.Tokens = []Token{*token}
+
+	if err := db.Create(user).Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func generateToken(openID string) *Token {
+	config := fetchConfig()
+	const accessTokenExpiresIn = 3600      // 1 hour (seconds)
+	const refreshTokenExpiresIn = 31536000 // 1 year (seconds)
+	secret := config.ApiSecret
+	token := &Token{
+		CreatedAt:             time.Now(),
+		UpdatedAt:             time.Now(),
+		AccessTokenExpiresIn:  accessTokenExpiresIn,
+		RefreshTokenExpiresIn: refreshTokenExpiresIn,
+	}
+	token.AccessToken, _ = token.genJWTToken(secret, openID, time.Duration(accessTokenExpiresIn)*time.Second)
+	token.RefreshToken, _ = token.genJWTToken(secret, openID, time.Duration(refreshTokenExpiresIn)*time.Second)
 	return token
+}
+
+// gen_jwt_access_token generates a JWT access token for the user with a given secret and expiration duration.
+func (t *Token) genJWTToken(secret string, openID string, expiresIn time.Duration) (string, error) {
+	//
+	const issuer = "learning" // Replace with your actual issuer
+	const audience = "douyin" // Replace with your actual audience
+	claims := jwt.MapClaims{
+		"open_id": openID,
+		"exp":     time.Now().Add(expiresIn).Unix(),
+		"iat":     time.Now().Unix(),
+		"iss":     issuer,   // Replace with your actual issuer
+		"aud":     audience, // Replace with your actual audience
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 }

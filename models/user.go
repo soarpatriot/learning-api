@@ -13,4 +13,5 @@ type User struct {
 	Avatar     string    `json:"avatar"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+	Tokens     []Token   `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"tokens"`
 }

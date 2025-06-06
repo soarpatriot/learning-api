@@ -4,6 +4,9 @@ dev:
   mysql_password: ""
   mysql_host: 127.0.0.1:3306
   mysql_db: learning
+  api_key: "your-production-api-key"
+  api_secret: "your-production-api-secret"
+  app_id: "your-app-id"
 
 production:
   profile: production
@@ -11,3 +14,6 @@ production:
   mysql_password: ""
   mysql_host: prodhost:3306
   mysql_db: prodlearning
+  api_key: "your-production-api-key"
+  api_secret: "your-production-api-secret"
+  app_id: "your-app-id"
