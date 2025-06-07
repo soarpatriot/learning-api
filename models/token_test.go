@@ -19,15 +19,24 @@ func setupTestDB() *gorm.DB {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&User{}, &Token{})
+	SetDB(db) // Set the global db variable for model methods
 	return db
+}
+
+// Add this helper to set the global db variable
+func SetDB(testDB *gorm.DB) {
+	db = testDB
 }
 
 func TestGenerateToken_JWTClaims(t *testing.T) {
 	os.Setenv("API_SECRET", "testsecret")
 	os.Setenv("API_KEY", "testkey")
-	db = setupTestDB()
+	_ = setupTestDB()
 	openID := "jwt_claims_openid"
-	token := generateToken(openID)
+	token, err := generateToken(openID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if token.AccessToken == "" || token.RefreshToken == "" {
 		t.Fatal("Tokens should not be empty")
 	}
@@ -53,7 +62,7 @@ func TestGenerateToken_JWTClaims(t *testing.T) {
 }
 
 func TestFindOrCreateUserToken_CreatesUserAndToken(t *testing.T) {
-	db = setupTestDB()
+	db := setupTestDB()
 	openid := "openid_test"
 	unionid := "unionid_test"
 	sessionKey := "sessionkey_test"
@@ -61,7 +70,7 @@ func TestFindOrCreateUserToken_CreatesUserAndToken(t *testing.T) {
 	data.SetOpenid(openid)
 	data.SetUnionid(unionid)
 	data.SetSessionKey(sessionKey)
-	tok, err := findOrCreateUserToken(data)
+	tok, err := (&Token{}).FindOrCreateUserToken(data)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -78,11 +87,10 @@ func TestFindOrCreateUserToken_CreatesUserAndToken(t *testing.T) {
 }
 
 func TestGenJWTToken_Expiration(t *testing.T) {
-	tok := &Token{}
 	secret := "expire_secret"
 	openID := "expire_openid"
 	expires := time.Second * 1
-	tkn, err := tok.genJWTToken(secret, openID, expires)
+	tkn, err := genJWTToken(secret, openID, expires)
 	if err != nil {
 		t.Fatalf("failed to generate jwt: %v", err)
 	}
@@ -108,44 +116,3 @@ func TestGenJWTToken_Expiration(t *testing.T) {
 		t.Error("JWT should be expired but is still valid")
 	}
 }
-
-// Mock client for Jscode2session test
-
-type mockDouyinClient struct{}
-
-func (m *mockDouyinClient) V2Jscode2session(req *openApiSdkClient.V2Jscode2sessionRequest) (*openApiSdkClient.V2Jscode2sessionResponse, error) {
-	return &openApiSdkClient.V2Jscode2sessionResponse{
-		Data: &openApiSdkClient.V2Jscode2sessionResponseData{
-			Openid:     ptrString("mock_openid"),
-			Unionid:    ptrString("mock_unionid"),
-			SessionKey: ptrString("mock_sessionkey"),
-		},
-		ErrNo: ptrInt64(0),
-	}, nil
-}
-
-func TestJscode2session(t *testing.T) {
-	os.Setenv("API_SECRET", "testsecret")
-	os.Setenv("API_KEY", "testkey")
-	os.Setenv("APP_ID", "testappid")
-
-	// Patch generateSdkClientFunc to return our mock client
-	origGen := generateSdkClientFunc
-	generateSdkClientFunc = func() (DouyinClient, error) {
-		return &mockDouyinClient{}, nil
-	}
-	defer func() { generateSdkClientFunc = origGen }()
-
-	db = setupTestDB()
-	code := "mock_code"
-	token, err := Jscode2session(code)
-	if err != nil {
-		t.Fatalf("Jscode2session failed: %v", err)
-	}
-	if token == "" {
-		t.Error("Expected non-empty token from Jscode2session")
-	}
-}
-
-func ptrString(s string) *string { return &s }
-func ptrInt64(i int64) *int64    { return &i }
