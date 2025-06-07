@@ -40,22 +40,12 @@ jobs:
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
           dycloud --version
 
-
-      - name: Login to Douyin Cloud
-        run: |
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
+          dycloud env:switch --app-name learning-api --env
+          dycloud container:push --tag learning-api:latest --service-name learning-api
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
           DOUYIN_PASSWORD: ${{ secrets.DOUYIN_PASSWORD }}
 
-
-      - name: Docker eng
-        run: |
-          dycloud env:switch --app-name learning-api --env
           
-
-
-      - name: Push Docker image to Douyin Cloud
-        run: |
-          dycloud container:push --tag learning-api:latest --service-name learning-api
 
