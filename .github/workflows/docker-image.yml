@@ -39,10 +39,11 @@ jobs:
           npm -v
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
           dycloud --version
-
+          IMAGE_ID=$(docker images --format="{{.ID}}" ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest | head -n 1)
+          echo "image_id=$IMAGE_ID" >> $GITHUB_OUTPUT
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
           dycloud env:switch --app-id tt02c1747c9dc91dcb01 --env dev
-          dycloud container:push --tag="${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest" --image-id="${{ steps.get_image_id.outputs.image_id }}" --service-name="learning-api"
+          dycloud container:push --tag="${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest" --image-id=$IMAGE_ID --service-name="learning-api"
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
           DOUYIN_PASSWORD: ${{ secrets.DOUYIN_PASSWORD }}
