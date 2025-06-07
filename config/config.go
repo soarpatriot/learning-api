@@ -10,7 +10,7 @@ type Config struct {
 	Profile       string `yaml:"profile"`
 	MySQLUser     string `yaml:"mysql_user"`
 	MySQLPassword string `yaml:"mysql_password"`
-	MySQLHost     string `yaml:"mysql_host"`
+	MySQLAddress  string `yaml:"mysql_host"`
 	MySQLDB       string `yaml:"mysql_db"`
 	ApiKey        string `yaml:"api_key"`
 	ApiSecret     string `yaml:"api_secret"`
@@ -52,8 +52,8 @@ func LoadConfig() Config {
 	if v := os.Getenv("MYSQL_PASSWORD"); v != "" {
 		cfg.MySQLPassword = v
 	}
-	if v := os.Getenv("MYSQL_HOST"); v != "" {
-		cfg.MySQLHost = v
+	if v := os.Getenv("MYSQL_ADDRESS"); v != "" {
+		cfg.MySQLAddress = v
 	}
 	if v := os.Getenv("MYSQL_DB"); v != "" {
 		cfg.MySQLDB = v
