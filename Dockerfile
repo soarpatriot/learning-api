@@ -35,10 +35,11 @@ COPY --from=builder /app/learning-api .
 # COPY migrations ./migrations
 
 # Expose the default port
-EXPOSE 8080
+EXPOSE 8000
 
 # Set environment variables for MySQL connection (override as needed)
 ENV PROFILE=production
+ENV PORT=8000
 
 # Run the binary with PROFILE=production
-CMD ["/bin/sh", "-c", "PROFILE=production ./learning-api"]
+CMD ["/bin/sh", "-c", "PROFILE=production PORT=${PORT} ./learning-api"]

@@ -5,6 +5,7 @@ import (
 	"learning-api/config"
 	"learning-api/models"
 	"learning-api/routes"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
@@ -44,7 +45,11 @@ func main() {
 		db.Create(&answer2)
 	}
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 	r := gin.Default()
 	routes.RegisterRoutes(r, db)
-	r.Run()
+	r.Run(":" + port)
 }
