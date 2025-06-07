@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o learning-api main.go
+RUN go build -o main main.go
 
 # Start a new minimal image for running
 FROM alpine:latest
@@ -28,12 +28,6 @@ WORKDIR /app
 # Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
 
-# Copy the built binary from builder
-COPY --from=builder /app/learning-api .
-
-# Copy any static files or migrations if needed (optional)
-# COPY migrations ./migrations
-
 # Expose the default port
 EXPOSE 8000
 
@@ -41,5 +35,17 @@ EXPOSE 8000
 ENV PROFILE=production
 ENV PORT=8000
 
-# Run the binary with PROFILE=production
-CMD ["/bin/sh", "-c", "PROFILE=production PORT=${PORT} ./learning-api"]
+WORKDIR /opt/application
+
+# Copy the built binary from builder
+COPY --from=builder /app/main /opt/application/main
+COPY --from=builder /app/run.sh /opt/application/run.sh
+
+# Copy any static files or migrations if needed (optional)
+# COPY migrations ./migrations
+
+USER root
+RUN chmod -R 777 /opt/application/run.sh
+
+CMD /opt/application/run.sh
+

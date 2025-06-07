@@ -29,4 +29,6 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
 	r.GET("/topics/:id/questions-answers", func(c *gin.Context) { handlers.GetQuestionsWithAnswers(c, db) })
 
 	r.POST("/token", handlers.PostToken)
+
+	r.GET("/v1/ping", handlers.PingHandler)
 }

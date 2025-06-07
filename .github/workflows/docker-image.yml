@@ -28,3 +28,34 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest
+
+      - name: Install dycloud-cli
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+          \. "$HOME/.nvm/nvm.sh"
+          nvm install 22
+          node -v
+          nvm current
+          npm -v
+          npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
+          dycloud --version
+        shell: bash
+
+      - name: Login to Douyin Cloud
+        run: |
+          dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
+        env:
+          DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
+          DOUYIN_PASSWORD: ${{ secrets.DOUYIN_PASSWORD }}
+        shell: bash
+
+      - name: Docker eng
+        run: |
+          dycloud env:switch --app-name learning-api --env
+          
+        shell: bash
+
+      - name: Push Docker image to Douyin Cloud
+        run: |
+          dycloud container:push --tag learning-api:latest --service-name learning-api
+        shell: bash
