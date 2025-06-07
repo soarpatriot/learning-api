@@ -41,7 +41,7 @@ jobs:
           dycloud --version
 
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
-          dycloud env:switch --app-name learning-api --env
+          dycloud env:switch --app-name learning-api --env dev
           dycloud container:push --tag learning-api:latest --service-name learning-api
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
