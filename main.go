@@ -25,6 +25,9 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	dsn := getDSN(cfg)
+	// println("Connecting to database with DSN:", dsn)
+	fmt.Println("Connecting to database with DSN:", dsn)
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
