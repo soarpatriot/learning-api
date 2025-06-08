@@ -57,6 +57,13 @@ jobs:
             echo "Attempt $i failed. Retrying in 5 seconds..."
             sleep 5
           done
+
+          # deploy to Douyin Cloud
+          for i in {1..3}; do
+            dycloud container:deploy --tag="${{ env.DOCKER_TAG_VERSIONED }}" --note="${{ env.DOCKER_TAG_VERSIONED }} deploy"  --service-name="learning-api" --service-size=1 --no-confirm && break
+            echo "Attempt $i deploy failed. Retrying in 5 seconds..."
+            sleep 5
+          done
           
         shell: bash
         env:

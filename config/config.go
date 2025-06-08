@@ -12,9 +12,10 @@ type Config struct {
 	MySQLPassword string `yaml:"mysql_password"`
 	MySQLAddress  string `yaml:"mysql_address"`
 	MySQLDB       string `yaml:"mysql_db"`
-	ApiKey        string `yaml:"api_key"`
-	ApiSecret     string `yaml:"api_secret"`
+	ClientKey     string `yaml:"client_key"`
+	ClientSecret  string `yaml:"client_secret"`
 	AppID         string `yaml:"app_id"`
+	AppSecret     string `yaml:"app_secret"`
 }
 
 type yamlConfig struct {
@@ -62,15 +63,18 @@ func LoadConfig() Config {
 	if v := os.Getenv("MYSQL_DB"); v != "" {
 		cfg.MySQLDB = v
 	}
-	// config api key and secret
-	if v := os.Getenv("API_KEY"); v != "" {
-		cfg.ApiKey = v
+	// config client credentials
+	if v := os.Getenv("CLIENT_KEY"); v != "" {
+		cfg.ClientKey = v
 	}
-	if v := os.Getenv("API_SECRET"); v != "" {
-		cfg.ApiSecret = v
+	if v := os.Getenv("CLIENT_SECRET"); v != "" {
+		cfg.ClientSecret = v
 	}
 	if v := os.Getenv("APP_ID"); v != "" {
 		cfg.AppID = v
+	}
+	if v := os.Getenv("APP_SECRET"); v != "" {
+		cfg.AppSecret = v
 	}
 
 	return cfg

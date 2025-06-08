@@ -4,9 +4,10 @@ dev:
   mysql_password: ""
   mysql_address: 127.0.0.1:3306
   mysql_db: learning_dev
-  api_key: "your-production-api-key"
-  api_secret: "your-production-api-secret"
-  app_id: "your-app-id"
+  client_key: ""
+  client_secret: ""
+  app_id: "tt02c1747c9dc91dcb01"
+  app_secret: ""
 
 production:
   profile: production
@@ -14,6 +15,7 @@ production:
   mysql_password: ""
   mysql_address: prodhost:3306
   mysql_db: learning_prod
-  api_key: "your-production-api-key"
-  api_secret: "your-production-api-secret"
-  app_id: "your-app-id"
+  client_key: ""
+  client_secret: ""
+  app_id: "tt02c1747c9dc91dcb01"
+  app_secret: ""

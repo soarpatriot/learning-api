@@ -28,11 +28,11 @@ func NewDouyinClient() ThirdPartyClient {
 
 func GenerateSdkClient() (sdkClient *openApiSdkClient.Client, error error) {
 	config := fetchConfig()
-	apiKey := config.ApiSecret
-	apiSecret := config.ApiKey
+	clintKey := config.ClientKey
+	clientSecret := config.ClientSecret
 	opt := new(credential.Config).
-		SetClientKey(apiKey).
-		SetClientSecret(apiSecret)
+		SetClientKey(clintKey).
+		SetClientSecret(clientSecret)
 	return openApiSdkClient.NewClient(opt)
 }
 
@@ -43,7 +43,7 @@ func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
 		return nil, err
 	}
 	config := fetchConfig()
-	sdkRequest := constructSessionRequest(code, config.AppID, config.ApiSecret)
+	sdkRequest := constructSessionRequest(code, config.AppID, config.AppSecret)
 
 	// sdk调用
 	sdkResponse, err := sdkClient.V2Jscode2session(sdkRequest)

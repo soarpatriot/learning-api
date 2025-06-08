@@ -85,7 +85,7 @@ func generateToken(openID string) (*Token, error) {
 	config := config.LoadConfig()
 	const accessTokenExpiresIn = 3600      // 1 hour (seconds)
 	const refreshTokenExpiresIn = 31536000 // 1 year (seconds)
-	secret := config.ApiSecret
+	secret := config.ClientSecret
 	token := &Token{
 		CreatedAt:             time.Now(),
 		UpdatedAt:             time.Now(),

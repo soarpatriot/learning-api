@@ -29,8 +29,8 @@ func SetDB(testDB *gorm.DB) {
 }
 
 func TestGenerateToken_JWTClaims(t *testing.T) {
-	os.Setenv("API_SECRET", "testsecret")
-	os.Setenv("API_KEY", "testkey")
+	os.Setenv("CLIENT_SECRET", "testsecret")
+	os.Setenv("CLIENT_KEY", "testkey")
 	_ = setupTestDB()
 	openID := "jwt_claims_openid"
 	token, err := generateToken(openID)
