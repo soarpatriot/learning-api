@@ -29,7 +29,9 @@ jobs:
           context: .
           push: true
           load: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:1.0.0-${{ github.run_number }}
       - name: List Docker images (debugging)
         run: docker images
       - name: Install dycloud-cli
@@ -55,6 +57,3 @@ jobs:
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
           DOUYIN_PASSWORD: ${{ secrets.DOUYIN_PASSWORD }}
-
-          
-
