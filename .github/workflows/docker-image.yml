@@ -49,6 +49,7 @@ jobs:
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
           dycloud --version
       - name: push to Douyin Cloud
+        timeout-minutes: 15
         run: |
           echo "Pushing Docker image to Douyin Cloud"
           TAG="soar/learning-api:latest"
