@@ -40,6 +40,7 @@ WORKDIR /opt/application
 # Copy the built binary from builder
 COPY --from=builder /app/main /opt/application/main
 COPY --from=builder /app/run.sh /opt/application/run.sh
+COPY --from=builder /app/config.yaml /opt/application/config.yaml
 
 # Copy any static files or migrations if needed (optional)
 # COPY migrations ./migrations
