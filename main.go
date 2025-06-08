@@ -14,7 +14,7 @@ import (
 
 func getDSN(cfg config.Config) string {
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.MySQLUser, cfg.MySQLPassword, cfg.MySQLAddress, cfg.MySQLDB)
+		cfg.MySQLUserName, cfg.MySQLPassword, cfg.MySQLAddress, cfg.MySQLDB)
 }
 
 func main() {

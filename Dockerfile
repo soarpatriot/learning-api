@@ -31,9 +31,6 @@ RUN apk --no-cache add ca-certificates
 # Expose the default port
 EXPOSE 8000
 
-# Set environment variables for MySQL connection (override as needed)
-ENV PROFILE=production
-ENV PORT=8000
 
 WORKDIR /opt/application
 

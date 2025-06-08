@@ -8,9 +8,9 @@ import (
 
 type Config struct {
 	Profile       string `yaml:"profile"`
-	MySQLUser     string `yaml:"mysql_user"`
+	MySQLUserName string `yaml:"mysql_username"`
 	MySQLPassword string `yaml:"mysql_password"`
-	MySQLAddress  string `yaml:"mysql_host"`
+	MySQLAddress  string `yaml:"mysql_address"`
 	MySQLDB       string `yaml:"mysql_db"`
 	ApiKey        string `yaml:"api_key"`
 	ApiSecret     string `yaml:"api_secret"`
@@ -23,7 +23,11 @@ type yamlConfig struct {
 }
 
 func LoadConfig() Config {
-	profile := getEnv("PROFILE", "dev")
+	// Check for environment variable CLOUD_ENV first
+	profile := os.Getenv("CLOUD_ENV")
+	if profile == "" {
+		profile = getEnv("PROFILE", "dev")
+	}
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		// Try parent directory (for tests run from subfolders)
@@ -46,8 +50,8 @@ func LoadConfig() Config {
 	}
 	// Allow env vars to override YAML
 	cfg.Profile = profile
-	if v := os.Getenv("MYSQL_USER"); v != "" {
-		cfg.MySQLUser = v
+	if v := os.Getenv("MYSQL_USERNAME"); v != "" {
+		cfg.MySQLUserName = v
 	}
 	if v := os.Getenv("MYSQL_PASSWORD"); v != "" {
 		cfg.MySQLPassword = v
