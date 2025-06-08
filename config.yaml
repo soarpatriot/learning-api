@@ -3,7 +3,7 @@ dev:
   mysql_username: root
   mysql_password: ""
   mysql_address: 127.0.0.1:3306
-  mysql_db: learning
+  mysql_db: learning_dev
   api_key: "your-production-api-key"
   api_secret: "your-production-api-secret"
   app_id: "your-app-id"
@@ -13,7 +13,7 @@ production:
   mysql_username: produser
   mysql_password: ""
   mysql_address: prodhost:3306
-  mysql_db: prod_learning
+  mysql_db: learning_prod
   api_key: "your-production-api-key"
   api_secret: "your-production-api-secret"
   app_id: "your-app-id"

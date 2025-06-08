@@ -26,7 +26,10 @@ func main() {
 	}
 	dsn := getDSN(cfg)
 	// println("Connecting to database with DSN:", dsn)
-	fmt.Println("Connecting to database with DSN:", dsn)
+	// mask the password in the DSN for security
+	linkString := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.MySQLUserName, "******", cfg.MySQLAddress, cfg.MySQLDB)
+	fmt.Println("Connecting to database with DSN:", linkString)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
