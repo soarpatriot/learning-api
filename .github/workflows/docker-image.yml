@@ -41,7 +41,7 @@ jobs:
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
           dycloud --version
     
-          TAG="${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest"
+          TAG="soar/learning-api:latest"
           echo "TAG: $TAG"
           IMAGE_ID=$(docker images --filter=reference="$TAG" --format "{{.ID}}")
           echo "Image ID: $IMAGE_ID"
