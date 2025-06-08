@@ -47,7 +47,7 @@ jobs:
           echo "Image ID: $IMAGE_ID"
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
           dycloud env:switch --app-id tt02c1747c9dc91dcb01 --env dev
-          dycloud container:push --tag="$TAG" --image-id="$IMAGE_ID" --service-name="learning-api" --remark="0.0.1"
+          dycloud container:push --tag="latest" --image-id="$IMAGE_ID" --service-name="learning-api" --remark="0.0.1"
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
           DOUYIN_PASSWORD: ${{ secrets.DOUYIN_PASSWORD }}
