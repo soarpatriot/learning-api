@@ -43,6 +43,7 @@ jobs:
     
           TAG="soar/learning-api:latest"
           echo "TAG: $TAG"
+          docker images
           IMAGE_ID=$(docker images --filter=reference="$TAG" --format "{{.ID}}")
           echo "Image ID: $IMAGE_ID"
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
