@@ -38,7 +38,7 @@ jobs:
             ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_VERSIONED }}
       - name: List Docker images (debugging)
         run: docker images
-      - name: Install dycloud-cli
+      - name: install dycloud-cli
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
           \. "$HOME/.nvm/nvm.sh"
@@ -48,7 +48,9 @@ jobs:
           npm -v
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
           dycloud --version
-    
+      - name: push to Douyin Cloud
+        run: |
+          echo "Pushing Docker image to Douyin Cloud"
           TAG="soar/learning-api:latest"
           echo "TAG: $TAG"
           docker images
