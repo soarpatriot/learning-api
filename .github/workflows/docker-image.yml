@@ -36,23 +36,13 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_LATEST }}
             ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_VERSIONED }}
-      - name: List Docker images (debugging)
-        run: docker images
-      - name: Setup Node.js and install dycloud-cli
-        id: setup_node
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+      - name: push to Douyin Cloud
+        timeout-minutes: 15
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
           \. "$HOME/.nvm/nvm.sh"
           nvm install 22
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
-          echo "$HOME/.nvm/versions/node/v22/bin" >> $GITHUB_PATH
-          echo "dycloud_version=$(dycloud --version)" >> $GITHUB_OUTPUT
-        shell: bash
-      - name: push to Douyin Cloud
-        timeout-minutes: 15
-        run: |
           echo "Pushing Docker image to Douyin Cloud"
           TAG="soar/learning-api:latest"
           echo "TAG: $TAG"
