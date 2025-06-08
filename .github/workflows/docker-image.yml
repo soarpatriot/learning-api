@@ -38,16 +38,16 @@ jobs:
             ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_VERSIONED }}
       - name: List Docker images (debugging)
         run: docker images
-      - name: install dycloud-cli
+      - name: Setup Node.js and install dycloud-cli
+        id: setup_node
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
           \. "$HOME/.nvm/nvm.sh"
           nvm install 22
-          node -v
-          nvm current
-          npm -v
           npm install -g @open-dy/cloud-cli --registry=https://registry.npmmirror.com/
-          dycloud --version
+          echo "::add-path::$HOME/.nvm/versions/node/v22/bin"
+          echo "::set-output name=dycloud_version::$(dycloud --version)"
+        shell: bash
       - name: push to Douyin Cloud
         timeout-minutes: 15
         run: |
