@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/learning-api
+      DOCKER_TAG_LATEST: latest
+      DOCKER_TAG_VERSIONED: 1.0.0-${{ github.run_number }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,8 +34,8 @@ jobs:
           push: true
           load: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/learning-api:1.0.0-${{ github.run_number }}
+            ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_LATEST }}
+            ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG_VERSIONED }}
       - name: List Docker images (debugging)
         run: docker images
       - name: Install dycloud-cli
@@ -52,7 +56,7 @@ jobs:
           echo "Image ID: $IMAGE_ID"
           dycloud login -e ${{ secrets.DOUYIN_USERNAME }} -p ${{ secrets.DOUYIN_PASSWORD }}
           dycloud env:switch --app-id tt02c1747c9dc91dcb01 --env dev
-          dycloud container:push --tag="latest" --image-id="$IMAGE_ID" --service-name="learning-api" --remark="0.0.1"
+          dycloud container:push --tag="${{ env.DOCKER_TAG_VERSIONED }}" --image-id="$IMAGE_ID" --service-name="learning-api" --remark="0.0.1"
         shell: bash
         env:
           DOUYIN_USERNAME: ${{ secrets.DOUYIN_USERNAME }}
