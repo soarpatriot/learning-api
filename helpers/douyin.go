@@ -37,9 +37,12 @@ func GenerateSdkClient() (sdkClient *openApiSdkClient.Client, error error) {
 }
 
 func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
+	fmt.Println("start to call douyin sdk jscode2session with code")
 	sdkClient, err := GenerateSdkClient()
-	token := &models.Token{}
+
 	if err != nil {
+		fmt.Println("generate sdk client error:", err)
+		// Handle the error appropriately, maybe return a custom error or nil
 		return nil, err
 	}
 	config := fetchConfig()
@@ -51,6 +54,8 @@ func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
 		fmt.Println("sdk call err:", err, " response:", sdkResponse)
 		return nil, err
 	}
+
+	token := &models.Token{}
 	token, err = token.FindOrCreateUserToken(sdkResponse.Data)
 	if err != nil {
 		fmt.Println("Error finding or creating user token:", err)
