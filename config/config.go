@@ -68,7 +68,7 @@ func LoadConfig() Config {
 		cfg.ClientKey = v
 	}
 	if v := os.Getenv("CLIENT_SECRET"); v != "" {
-		cfg.ClientSecret = v
+		cfg.ClientSecret = "testsecret"
 	}
 	if v := os.Getenv("APP_ID"); v != "" {
 		cfg.AppID = v

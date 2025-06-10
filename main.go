@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"learning-api/config"
+	"learning-api/middlewares"
 	"learning-api/models"
 	"learning-api/routes"
 	"os"
@@ -57,6 +58,7 @@ func main() {
 		port = "8000"
 	}
 	r := gin.Default()
+	r.Use(middlewares.AuthMiddleware())
 	routes.RegisterRoutes(r, db)
 	r.Run(":" + port)
 }

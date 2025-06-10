@@ -10,12 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
-
-func SetDB(database *gorm.DB) {
-	db = database
-}
-
 // Token represents a token entity
 type Token struct {
 	ID                    uint      `gorm:"primaryKey" json:"id"`

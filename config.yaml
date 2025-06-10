@@ -4,7 +4,7 @@ dev:
   mysql_password: ""
   mysql_address: 127.0.0.1:3306
   mysql_db: learning_dev
-  client_key: ""
+  client_key: "1111"
   client_secret: ""
   app_id: "tt56aa2017c9a244df01"
   app_secret: ""
