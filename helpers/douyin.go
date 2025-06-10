@@ -49,6 +49,7 @@ func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
 		return nil, err
 	}
 	config := fetchConfig()
+	fmt.Println("app id:", config.AppID, " app secret: ", config.AppSecret)
 	sdkRequest := constructSessionRequest(code, config.AppID, config.AppSecret)
 
 	// sdk调用
