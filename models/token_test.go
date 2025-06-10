@@ -1,8 +1,9 @@
-package models
+package models_test
 
 // Unit tests for models/token.go
 
 import (
+	. "learning-api/models"
 	"os"
 	"testing"
 	"time"
@@ -23,17 +24,11 @@ func setupTestDB() *gorm.DB {
 	return db
 }
 
-// Add this helper to set the global db variable
-func SetDB(testDB *gorm.DB) {
-	db = testDB
-}
-
 func TestGenerateToken_JWTClaims(t *testing.T) {
 	os.Setenv("CLIENT_SECRET", "testsecret")
 	os.Setenv("CLIENT_KEY", "testkey")
 	_ = setupTestDB()
-	openID := "jwt_claims_openid"
-	token, err := generateToken(openID)
+	token, err := GenerateToken()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,9 +44,6 @@ func TestGenerateToken_JWTClaims(t *testing.T) {
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
 		t.Fatal("claims not mapclaims")
-	}
-	if claims["open_id"] != openID {
-		t.Errorf("open_id claim mismatch: got %v", claims["open_id"])
 	}
 	if claims["iss"] != "learning" {
 		t.Errorf("issuer claim mismatch: got %v", claims["iss"])
@@ -86,11 +78,62 @@ func TestFindOrCreateUserToken_CreatesUserAndToken(t *testing.T) {
 	}
 }
 
+func TestFindOrCreateUserToken_NewAndExistingUser(t *testing.T) {
+	db := setupTestDB()
+	openid := "new_openid_test"
+	unionid := "new_unionid_test"
+	sessionKey := "new_sessionkey_test"
+	data := &openApiSdkClient.V2Jscode2sessionResponseData{}
+	data.SetOpenid(openid)
+	data.SetUnionid(unionid)
+	data.SetSessionKey(sessionKey)
+
+	// First time: create new user and token
+	tok, err := (&Token{}).FindOrCreateUserToken(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if tok == nil || tok.AccessToken == "" {
+		t.Fatal("Token should be created and not empty")
+	}
+	var user User
+	if err := db.Where("open_id = ?", openid).First(&user).Error; err != nil {
+		t.Fatal("User should be created in DB")
+	}
+	if user.SessionKey != sessionKey {
+		t.Errorf("SessionKey mismatch: got %v", user.SessionKey)
+	}
+	db.Preload("Tokens").First(&user, "open_id = ?", openid)
+	if len(user.Tokens) != 1 {
+		t.Errorf("Expected 1 token, got %d", len(user.Tokens))
+	}
+
+	// Second time: save existing user with new token
+	newSessionKey := "updated_sessionkey_test"
+	data.SetSessionKey(newSessionKey)
+	tok, err = (&Token{}).FindOrCreateUserToken(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if tok == nil || tok.AccessToken == "" {
+		t.Fatal("Token should be created and not empty")
+	}
+	if err := db.Where("open_id = ?", openid).First(&user).Error; err != nil {
+		t.Fatal("User should exist in DB")
+	}
+	if user.SessionKey != newSessionKey {
+		t.Errorf("SessionKey mismatch: got %v", user.SessionKey)
+	}
+	db.Preload("Tokens").First(&user, "open_id = ?", openid)
+	if len(user.Tokens) != 1 {
+		t.Errorf("Expected 1 token, got %d", len(user.Tokens))
+	}
+}
+
 func TestGenJWTToken_Expiration(t *testing.T) {
 	secret := "expire_secret"
-	openID := "expire_openid"
 	expires := time.Second * 1
-	tkn, err := genJWTToken(secret, openID, expires)
+	tkn, err := GenJWTToken(secret, expires)
 	if err != nil {
 		t.Fatalf("failed to generate jwt: %v", err)
 	}
@@ -101,11 +144,11 @@ func TestGenJWTToken_Expiration(t *testing.T) {
 		t.Fatalf("JWT not valid: %v", err)
 	}
 	claims, ok := parsed.Claims.(jwt.MapClaims)
+	if claims["exp"] == nil {
+		t.Error("Expiration claim should be present")
+	}
 	if !ok {
 		t.Fatal("claims not mapclaims")
-	}
-	if claims["open_id"] != openID {
-		t.Errorf("open_id claim mismatch: got %v", claims["open_id"])
 	}
 	// Wait for expiration
 	time.Sleep(2 * time.Second)

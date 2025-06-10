@@ -25,7 +25,7 @@ func PostToken(c *gin.Context) {
 	}
 
 	client := newDouyinClientFunc()
-	result, err := client.Jscode2session(req.Code)
+	result, err := client.Jscode2session(req.Code, "")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

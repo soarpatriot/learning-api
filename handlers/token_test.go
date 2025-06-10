@@ -17,9 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type handlerMockDouyinClient struct{}
-
-func (m *handlerMockDouyinClient) V2Jscode2session(req *openApiSdkClient.V2Jscode2sessionRequest) (*openApiSdkClient.V2Jscode2sessionResponse, error) {
+func (m *mockHandlerDouyinClient) V2Jscode2session(req *openApiSdkClient.V2Jscode2sessionRequest) (*openApiSdkClient.V2Jscode2sessionResponse, error) {
 	return &openApiSdkClient.V2Jscode2sessionResponse{
 		Data: &openApiSdkClient.V2Jscode2sessionResponseData{
 			Openid:     ptrString("mock_openid"),
@@ -88,7 +86,7 @@ func TestPostToken(t *testing.T) {
 // and returns a mock token for testing
 type mockHandlerDouyinClient struct{}
 
-func (m *mockHandlerDouyinClient) Jscode2session(code string) (*models.Token, error) {
+func (m *mockHandlerDouyinClient) Jscode2session(code string, anonymousCode string) (*models.Token, error) {
 	return &models.Token{
 		AccessToken:  "mock_access_token",
 		RefreshToken: "mock_refresh_token",

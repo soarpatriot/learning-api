@@ -11,7 +11,7 @@ import (
 
 type ThirdPartyClient interface {
 	// You can add fields like baseURL, http.Client, etc.
-	Jscode2session(code string) (*models.Token, error)
+	Jscode2session(code string, anonymousCode string) (*models.Token, error)
 }
 
 type DouyinClient struct {
@@ -37,7 +37,7 @@ func GenerateSdkClient() (sdkClient *openApiSdkClient.Client, error error) {
 	return openApiSdkClient.NewClient(opt)
 }
 
-func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
+func (d *DouyinClient) Jscode2session(code string, anonymousCode string) (*models.Token, error) {
 	fmt.Println("start to call douyin sdk jscode2session with code")
 	sdkClient, err := GenerateSdkClient()
 
@@ -48,12 +48,15 @@ func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
 	}
 	config := fetchConfig()
 	fmt.Println("app id:", config.AppID, " app secret: ", config.AppSecret)
-	sdkRequest := constructSessionRequest(code, config.AppID, config.AppSecret)
+
+	fmt.Println("code:", code, " anonymous code: ", anonymousCode)
+	sdkRequest := constructSessionRequest(code, anonymousCode, config.AppID, config.AppSecret)
 
 	// sdk调用
 	sdkResponse, err := sdkClient.V2Jscode2session(sdkRequest)
 	if err != nil || sdkResponse == nil || sdkResponse.ErrNo == nil || *sdkResponse.ErrNo != 0 {
-		fmt.Println("sdk call err:", err, " response:", sdkResponse)
+
+		fmt.Println("sdk call err:", err, " response:")
 		return nil, err
 	}
 
@@ -66,7 +69,7 @@ func (d *DouyinClient) Jscode2session(code string) (*models.Token, error) {
 	return token, nil
 }
 
-func constructSessionRequest(code string, appid string, secret string) *openApiSdkClient.V2Jscode2sessionRequest {
+func constructSessionRequest(code string, anonymousCode string, appid string, secret string) *openApiSdkClient.V2Jscode2sessionRequest {
 	sdkRequest := &openApiSdkClient.V2Jscode2sessionRequest{}
 
 	sdkRequest.SetAppid(appid)

@@ -6,7 +6,7 @@ dev:
   mysql_db: learning_dev
   client_key: ""
   client_secret: ""
-  app_id: "tt02c1747c9dc91dcb01"
+  app_id: "tt56aa2017c9a244df01"
   app_secret: ""
 
 production:
@@ -17,5 +17,5 @@ production:
   mysql_db: learning_prod
   client_key: ""
   client_secret: ""
-  app_id: "tt02c1747c9dc91dcb01"
+  app_id: "tt56aa2017c9a244df01"
   app_secret: ""

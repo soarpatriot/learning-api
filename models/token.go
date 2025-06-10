@@ -10,7 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB // Initialize this variable appropriately in your application
+var db *gorm.DB
+
+func SetDB(database *gorm.DB) {
+	db = database
+}
 
 // Token represents a token entity
 type Token struct {
@@ -22,6 +26,7 @@ type Token struct {
 	RefreshTokenExpiresIn int       `json:"refresh_token_expires_in"`
 	CreatedAt             time.Time `json:"created_at"`
 	UpdatedAt             time.Time `json:"updated_at"`
+	User                  User      // One-to-one relationship with User
 }
 
 func (t *Token) FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (token *Token, err error) {
@@ -45,10 +50,15 @@ func (t *Token) FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionRes
 	} else {
 		// user found, update the user updated_at and session key
 
-		token, err = generateToken(*data.Openid)
+		token, err = GenerateToken()
 		if err != nil {
 			return nil, err
 		}
+		// delete all the tokens where user_id = user.ID
+		if err := db.Where("user_id = ?", user.ID).Delete(&Token{}).Error; err != nil {
+			return nil, err
+		}
+
 		user.Tokens = []Token{*token}
 		user.SessionKey = *data.SessionKey
 		user.UpdatedAt = time.Now()
@@ -68,10 +78,11 @@ func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData)
 		UpdatedAt:  time.Now(),
 	}
 
-	token, err := generateToken(*data.Openid)
+	token, err := GenerateToken()
 	if err != nil {
 		return nil, err
 	}
+
 	user.Tokens = []Token{*token}
 
 	if err := db.Create(user).Error; err != nil {
@@ -81,7 +92,7 @@ func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData)
 	return user, nil
 }
 
-func generateToken(openID string) (*Token, error) {
+func GenerateToken() (*Token, error) {
 	config := config.LoadConfig()
 	const accessTokenExpiresIn = 3600      // 1 hour (seconds)
 	const refreshTokenExpiresIn = 31536000 // 1 year (seconds)
@@ -92,12 +103,12 @@ func generateToken(openID string) (*Token, error) {
 		AccessTokenExpiresIn:  accessTokenExpiresIn,
 		RefreshTokenExpiresIn: refreshTokenExpiresIn,
 	}
-	accessToken, err := genJWTToken(secret, openID, time.Duration(accessTokenExpiresIn)*time.Second)
+	accessToken, err := GenJWTToken(secret, time.Duration(accessTokenExpiresIn)*time.Second)
 	if err != nil {
 		return nil, err
 	}
 	token.AccessToken = accessToken
-	refreshToken, err := genJWTToken(secret, openID, time.Duration(refreshTokenExpiresIn)*time.Second)
+	refreshToken, err := GenJWTToken(secret, time.Duration(refreshTokenExpiresIn)*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -106,16 +117,15 @@ func generateToken(openID string) (*Token, error) {
 }
 
 // gen_jwt_access_token generates a JWT access token for the user with a given secret and expiration duration.
-func genJWTToken(secret string, openID string, expiresIn time.Duration) (string, error) {
+func GenJWTToken(secret string, expiresIn time.Duration) (string, error) {
 	//
 	const issuer = "learning" // Replace with your actual issuer
 	const audience = "douyin" // Replace with your actual audience
 	claims := jwt.MapClaims{
-		"open_id": openID,
-		"exp":     time.Now().Add(expiresIn).Unix(),
-		"iat":     time.Now().Unix(),
-		"iss":     issuer,   // Replace with your actual issuer
-		"aud":     audience, // Replace with your actual audience
+		"exp": time.Now().Add(expiresIn).Unix(),
+		"iat": time.Now().Unix(),
+		"iss": issuer,   // Replace with your actual issuer
+		"aud": audience, // Replace with your actual audience
 	}
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return jwtToken.SignedString([]byte(secret))
