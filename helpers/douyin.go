@@ -34,8 +34,6 @@ func GenerateSdkClient() (sdkClient *openApiSdkClient.Client, error error) {
 		SetClientKey(clintKey).
 		SetClientSecret(clientSecret)
 
-	fmt.Println("client key:", clintKey)
-	fmt.Println("client secret:", clientSecret)
 	return openApiSdkClient.NewClient(opt)
 }
 
