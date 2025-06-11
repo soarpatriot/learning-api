@@ -18,6 +18,7 @@ type Token struct {
 	AccessTokenExpiresIn  int       `json:"access_token_expires_in"`
 	RefreshToken          string    `json:"refresh_token"`
 	RefreshTokenExpiresIn int       `json:"refresh_token_expires_in"`
+	RefreshTokenExpiry    time.Time `json:"refresh_token_expiry"`
 	CreatedAt             time.Time `json:"created_at"`
 	UpdatedAt             time.Time `json:"updated_at"`
 	User                  User      // One-to-one relationship with User
@@ -28,6 +29,18 @@ func NewToken() *Token {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
+}
+
+func FindToken(accessToken, refreshToken string) (*Token, error) {
+	var token Token
+	result := db.Where("access_token = ? AND refresh_token = ?", accessToken, refreshToken).First(&token)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, nil // Token not found
+		}
+		return nil, result.Error
+	}
+	return &token, nil
 }
 
 func FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (token *Token, err error) {
@@ -69,6 +82,10 @@ func FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) 
 		}
 		return token, nil
 	}
+}
+
+func NewUserAndToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (*User, error) {
+	return createNewUserWithToken(data)
 }
 
 func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (*User, error) {
@@ -113,13 +130,9 @@ func (t *Token) GenTokenWithDate() error {
 func (t *Token) RefreshToNewToken() (*Token, error) {
 
 	const accessTokenExpiresIn = 3600 // 1 hour (seconds)
-
-	newToken := &Token{
-		UserID:               t.UserID,
-		AccessTokenExpiresIn: accessTokenExpiresIn,
-		CreatedAt:            time.Now(),
-		UpdatedAt:            time.Now(),
-	}
+	newToken := NewToken()
+	newToken.UserID = t.UserID
+	newToken.AccessTokenExpiresIn = accessTokenExpiresIn
 
 	newRefreshTokenExpiresIn := t.RefreshTokenExpiresIn - accessTokenExpiresIn
 
