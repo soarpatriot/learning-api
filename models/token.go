@@ -18,7 +18,6 @@ type Token struct {
 	AccessTokenExpiresIn  int       `json:"access_token_expires_in"`
 	RefreshToken          string    `json:"refresh_token"`
 	RefreshTokenExpiresIn int       `json:"refresh_token_expires_in"`
-	RefreshTokenExpiry    time.Time `json:"refresh_token_expiry"`
 	CreatedAt             time.Time `json:"created_at"`
 	UpdatedAt             time.Time `json:"updated_at"`
 	User                  User      // One-to-one relationship with User
