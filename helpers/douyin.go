@@ -60,8 +60,7 @@ func (d *DouyinClient) Jscode2session(code string, anonymousCode string) (*model
 		return nil, err
 	}
 
-	token := &models.Token{}
-	token, err = token.FindOrCreateUserToken(sdkResponse.Data)
+	token, err := models.FindOrCreateUserToken(sdkResponse.Data)
 	if err != nil {
 		fmt.Println("Error finding or creating user token:", err)
 		return nil, err

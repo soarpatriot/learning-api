@@ -1,12 +1,10 @@
 package middlewares_test
 
 import (
-	"learning-api/config"
 	"learning-api/middlewares"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"learning-api/models"
 
@@ -26,7 +24,11 @@ func TestAuthMiddleware_ValidToken(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/topics", nil)
 	user := models.User{OpenID: "test_openid", UnionID: "test_unionid", SessionKey: "test_sessionkey"}
-	token, _ := models.GenerateToken()
+	token := models.NewToken()
+	err := token.GenTokenWithDate()
+	if err != nil {
+		t.Fatal(err)
+	}
 	user.Tokens = []models.Token{*token}
 	models.GetDB().Create(&user)
 	models.GetDB().Save(&token)
@@ -85,25 +87,10 @@ func TestAuthMiddleware_ExpiredToken(t *testing.T) {
 }
 
 func generateTestToken() (*models.Token, error) {
-	config := config.LoadConfig()
-	const accessTokenExpiresIn = 3600      // 1 hour (seconds)
-	const refreshTokenExpiresIn = 31536000 // 1 year (seconds)
-	secret := config.ClientSecret
-	token := &models.Token{
-		CreatedAt:             time.Now(),
-		UpdatedAt:             time.Now(),
-		AccessTokenExpiresIn:  accessTokenExpiresIn,
-		RefreshTokenExpiresIn: refreshTokenExpiresIn,
-	}
-	accessToken, err := models.GenJWTToken(secret, -time.Duration(accessTokenExpiresIn)*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	token.AccessToken = accessToken
-	refreshToken, err := models.GenJWTToken(secret, -time.Duration(refreshTokenExpiresIn)*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	token.RefreshToken = refreshToken
+	token := models.NewToken()
+
+	accessTokenExpiresIn := -3600      // Set to expired
+	refreshTokenExpiresIn := -31536000 // Set to expired
+	token.SetAccessTokenAndRefreshToken(accessTokenExpiresIn, refreshTokenExpiresIn)
 	return token, nil
 }

@@ -3,7 +3,7 @@ package models_test
 // Unit tests for models/token.go
 
 import (
-	. "learning-api/models"
+	"learning-api/models"
 	"os"
 	"testing"
 	"time"
@@ -19,8 +19,8 @@ func setupTestDB() *gorm.DB {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&User{}, &Token{})
-	SetDB(db) // Set the global db variable for model methods
+	db.AutoMigrate(&models.User{}, &models.Token{})
+	models.SetDB(db) // Set the global db variable for model methods
 	return db
 }
 
@@ -28,7 +28,8 @@ func TestGenerateToken_JWTClaims(t *testing.T) {
 	os.Setenv("CLIENT_SECRET", "testsecret")
 	os.Setenv("CLIENT_KEY", "testkey")
 	_ = setupTestDB()
-	token, err := GenerateToken()
+	token := models.NewToken()
+	err := token.GenTokenWithDate()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,14 +63,14 @@ func TestFindOrCreateUserToken_CreatesUserAndToken(t *testing.T) {
 	data.SetOpenid(openid)
 	data.SetUnionid(unionid)
 	data.SetSessionKey(sessionKey)
-	tok, err := (&Token{}).FindOrCreateUserToken(data)
+	tok, err := models.FindOrCreateUserToken(data)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if tok == nil || tok.AccessToken == "" {
+	if tok == nil || tok.AccessToken == "" || tok.RefreshToken == "" {
 		t.Fatal("Token should be created and not empty")
 	}
-	var user User
+	var user models.User
 	if err := db.Where("open_id = ?", openid).First(&user).Error; err != nil {
 		t.Fatal("User should be created in DB")
 	}
@@ -89,14 +90,14 @@ func TestFindOrCreateUserToken_NewAndExistingUser(t *testing.T) {
 	data.SetSessionKey(sessionKey)
 
 	// First time: create new user and token
-	tok, err := (&Token{}).FindOrCreateUserToken(data)
+	tok, err := models.FindOrCreateUserToken(data)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if tok == nil || tok.AccessToken == "" {
+	if tok == nil || tok.AccessToken == "" || tok.RefreshToken == "" {
 		t.Fatal("Token should be created and not empty")
 	}
-	var user User
+	var user models.User
 	if err := db.Where("open_id = ?", openid).First(&user).Error; err != nil {
 		t.Fatal("User should be created in DB")
 	}
@@ -111,11 +112,11 @@ func TestFindOrCreateUserToken_NewAndExistingUser(t *testing.T) {
 	// Second time: save existing user with new token
 	newSessionKey := "updated_sessionkey_test"
 	data.SetSessionKey(newSessionKey)
-	tok, err = (&Token{}).FindOrCreateUserToken(data)
+	tok, err = models.FindOrCreateUserToken(data)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if tok == nil || tok.AccessToken == "" {
+	if tok == nil || tok.AccessToken == "" || tok.RefreshToken == "" {
 		t.Fatal("Token should be created and not empty")
 	}
 	if err := db.Where("open_id = ?", openid).First(&user).Error; err != nil {
@@ -133,7 +134,7 @@ func TestFindOrCreateUserToken_NewAndExistingUser(t *testing.T) {
 func TestGenJWTToken_Expiration(t *testing.T) {
 	secret := "expire_secret"
 	expires := time.Second * 1
-	tkn, err := GenJWTToken(secret, expires)
+	tkn, err := models.GenJWTToken(secret, expires)
 	if err != nil {
 		t.Fatalf("failed to generate jwt: %v", err)
 	}

@@ -23,7 +23,14 @@ type Token struct {
 	User                  User      // One-to-one relationship with User
 }
 
-func (t *Token) FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (token *Token, err error) {
+func NewToken() *Token {
+	return &Token{
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+}
+
+func FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (token *Token, err error) {
 
 	var user *User
 
@@ -44,7 +51,8 @@ func (t *Token) FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionRes
 	} else {
 		// user found, update the user updated_at and session key
 
-		token, err = GenerateToken()
+		token := NewToken()
+		err := token.GenTokenWithDate()
 		if err != nil {
 			return nil, err
 		}
@@ -59,8 +67,8 @@ func (t *Token) FindOrCreateUserToken(data *openApiSdkClient.V2Jscode2sessionRes
 		if err := db.Save(&user).Error; err != nil {
 			return nil, err
 		}
+		return token, nil
 	}
-	return token, nil
 }
 
 func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData) (*User, error) {
@@ -71,8 +79,8 @@ func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData)
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
-
-	token, err := GenerateToken()
+	token := NewToken()
+	err := token.GenTokenWithDate()
 	if err != nil {
 		return nil, err
 	}
@@ -86,29 +94,66 @@ func createNewUserWithToken(data *openApiSdkClient.V2Jscode2sessionResponseData)
 	return user, nil
 }
 
-func GenerateToken() (*Token, error) {
-	config := config.LoadConfig()
+func (t *Token) GenTokenWithDate() error {
+
 	const accessTokenExpiresIn = 3600      // 1 hour (seconds)
 	const refreshTokenExpiresIn = 31536000 // 1 year (seconds)
-	secret := config.ClientSecret
-	token := &Token{
-		CreatedAt:             time.Now(),
-		UpdatedAt:             time.Now(),
-		AccessTokenExpiresIn:  accessTokenExpiresIn,
-		RefreshTokenExpiresIn: refreshTokenExpiresIn,
+
+	t.AccessTokenExpiresIn = accessTokenExpiresIn
+	t.RefreshTokenExpiresIn = refreshTokenExpiresIn
+
+	err := t.SetAccessTokenAndRefreshToken(accessTokenExpiresIn, refreshTokenExpiresIn)
+	if err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func (t *Token) RefreshToNewToken() (*Token, error) {
+
+	const accessTokenExpiresIn = 3600 // 1 hour (seconds)
+
+	newToken := &Token{
+		UserID:               t.UserID,
+		AccessTokenExpiresIn: accessTokenExpiresIn,
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
+	}
+
+	newRefreshTokenExpiresIn := t.RefreshTokenExpiresIn - accessTokenExpiresIn
+
+	err := newToken.SetAccessTokenAndRefreshToken(accessTokenExpiresIn, newRefreshTokenExpiresIn)
+	if err != nil {
+		return nil, err
+	}
+	if err := db.Save(newToken).Error; err != nil {
+		return nil, err
+	}
+
+	return newToken, nil
+}
+
+func (t *Token) SetAccessTokenAndRefreshToken(accessTokenExpiresIn int, refreshTokenExpiresIn int) error {
+	config := config.LoadConfig()
+	secret := config.ClientSecret
+	t.AccessTokenExpiresIn = accessTokenExpiresIn
 	accessToken, err := GenJWTToken(secret, time.Duration(accessTokenExpiresIn)*time.Second)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	token.AccessToken = accessToken
+	t.AccessToken = accessToken
 	refreshToken, err := GenJWTToken(secret, time.Duration(refreshTokenExpiresIn)*time.Second)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	token.RefreshToken = refreshToken
-	return token, nil
+	t.RefreshToken = refreshToken
+	t.RefreshTokenExpiresIn = refreshTokenExpiresIn
+
+	return nil
 }
+
+// GenJWTToken generates a JWT token with the specified secret and expiration duration.
 
 // gen_jwt_access_token generates a JWT access token for the user with a given secret and expiration duration.
 func GenJWTToken(secret string, expiresIn time.Duration) (string, error) {

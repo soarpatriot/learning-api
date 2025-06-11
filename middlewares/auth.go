@@ -20,7 +20,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing", "code": "4970"})
 			c.Abort()
 			return
 		}
@@ -46,11 +46,11 @@ func validateToken(tokenString string, c *gin.Context) bool {
 	if err != nil || !parsedToken.Valid {
 		if strings.Contains(err.Error(), "token is expired") {
 			fmt.Println("err", err, "  error()", err.Error())
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "expired token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "expired token", "code": "4980"})
 			return false
 		}
 		fmt.Println("err", err, "  error()", err.Error())
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "code": "4981"})
 		return false
 	}
 
@@ -62,7 +62,7 @@ func validateToken(tokenString string, c *gin.Context) bool {
 	// }
 
 	if !ok || claims["exp"] == nil || claims["iat"] == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims", "code": "4982"})
 		return false
 	}
 
