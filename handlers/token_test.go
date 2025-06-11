@@ -72,7 +72,7 @@ func TestPostToken(t *testing.T) {
 	}
 }
 
-func TestPostRefreshToken(t *testing.T) {
+func TestPostRefreshToken_ValidRequest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db := setupTestDB()
 	setModelsDB(db)
@@ -97,7 +97,6 @@ func TestPostRefreshToken(t *testing.T) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
-	//conver the w.Body to a token struct
 	var responseToken models.Token
 	fmt.Println("Response Body:", w.Body.String())
 	if err := json.Unmarshal(w.Body.Bytes(), &responseToken); err != nil {
@@ -111,21 +110,33 @@ func TestPostRefreshToken(t *testing.T) {
 	}
 
 	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Body)
-	}
-
-	if w.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", w.Code)
 	}
+}
+
+func TestPostRefreshToken_InvalidRequest(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := setupTestDB()
+	setModelsDB(db)
+	r := gin.Default()
+	r.POST("/refresh-token", PostRefreshToken)
 
 	// Invalid request (missing tokens)
-	req, _ = http.NewRequest("POST", "/refresh-token", bytes.NewBuffer([]byte(`{}`)))
+	req, _ := http.NewRequest("POST", "/refresh-token", bytes.NewBuffer([]byte(`{}`)))
 	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("expected 400, got %d", w.Code)
 	}
+}
+
+func TestPostRefreshToken_ExpiredToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db := setupTestDB()
+	setModelsDB(db)
+	r := gin.Default()
+	r.POST("/refresh-token", PostRefreshToken)
 
 	// Expired refresh token
 	expiredToken := &models.Token{
@@ -136,9 +147,9 @@ func TestPostRefreshToken(t *testing.T) {
 	}
 
 	db.Create(expiredToken)
-	req, _ = http.NewRequest("POST", "/refresh-token", bytes.NewBuffer([]byte(`{"access_token":"expired_access_token","refresh_token":"expired_refresh_token"}`)))
+	req, _ := http.NewRequest("POST", "/refresh-token", bytes.NewBuffer([]byte(`{"access_token":"expired_access_token","refresh_token":"expired_refresh_token"}`)))
 	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("expected 401, got %d", w.Code)
