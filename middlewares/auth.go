@@ -28,6 +28,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 		if !validateToken(tokenString, c) {
+			c.Abort()
 			return
 		}
 
