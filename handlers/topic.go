@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"learning-api/models"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"learning-api/models"
 )
 
 func ListTopics(c *gin.Context, db *gorm.DB) {
@@ -32,10 +33,11 @@ func CreateTopic(c *gin.Context, db *gorm.DB) {
 func GetTopic(c *gin.Context, db *gorm.DB) {
 	var topic models.Topic
 	id := c.Param("id")
-	if err := db.First(&topic, id).Error; err != nil {
+	if err := db.Preload("Questions.Answers").First(&topic, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Topic not found"})
 		return
 	}
+
 	c.JSON(http.StatusOK, topic)
 }
 
