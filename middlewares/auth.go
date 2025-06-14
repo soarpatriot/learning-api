@@ -34,7 +34,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		user, _ := loadUserFromToken(tokenString)
 
-		c.Set("loggedInUser", user)
+		c.Set("currentUser", user)
 		c.Next()
 	}
 }

@@ -37,21 +37,7 @@ func main() {
 		panic("failed to connect database")
 	}
 	models.SetDB(db)
-	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{}, &models.User{}, &models.Token{})
-
-	// Insert example data if tables are empty
-	var count int64
-	db.Model(&models.Topic{}).Count(&count)
-	if count == 0 {
-		topic := models.Topic{Name: "Go Basics", Description: "Learn Go basics", Explaination: "Covers variables, loops, etc."}
-		db.Create(&topic)
-		question := models.Question{Content: "What is a goroutine?", Weight: 1, TopicID: topic.ID}
-		db.Create(&question)
-		answer1 := models.Answer{Content: "A lightweight thread managed by Go runtime", Correct: true, QuestionID: question.ID}
-		answer2 := models.Answer{Content: "A type of variable", Correct: false, QuestionID: question.ID}
-		db.Create(&answer1)
-		db.Create(&answer2)
-	}
+	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{}, &models.User{}, &models.Token{}, &models.Experience{}, &models.Reply{})
 
 	port := os.Getenv("PORT")
 	if port == "" {
