@@ -35,8 +35,8 @@ func TestCreateExperience_Success(t *testing.T) {
 	// Insert a user for foreign key
 	db.Create(&models.User{ID: 42})
 	body, _ := json.Marshal(map[string]interface{}{
-		"topic_id": 1,
-		"replies":  []uint{2, 3},
+		"topic_id":   1,
+		"answer_ids": []uint{2, 3},
 	})
 	req, _ := http.NewRequest("POST", "/experience", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -73,8 +73,8 @@ func TestCreateExperience_Unauthorized(t *testing.T) {
 		CreateExperience(c)
 	})
 	body, _ := json.Marshal(map[string]interface{}{
-		"topic_id": 1,
-		"replies":  []uint{2, 3},
+		"topic_id":   1,
+		"answer_ids": []uint{2, 3},
 	})
 	req, _ := http.NewRequest("POST", "/experience", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")

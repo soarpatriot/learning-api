@@ -14,8 +14,8 @@ func TestExperience_CreateWithReplies(t *testing.T) {
 	SetDB(db)
 
 	e := &Experience{}
-	replies := []uint{1, 2, 3}
-	err := e.CreateWithReplies(10, 20, replies)
+	answerIDs := []uint{1, 2, 3}
+	err := e.CreateWithReplies(10, 20, answerIDs)
 	assert.NoError(t, err)
 	assert.Equal(t, uint(10), e.TopicID)
 	assert.Equal(t, uint(20), e.UserID)

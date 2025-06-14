@@ -8,8 +8,8 @@ import (
 )
 
 type ExperienceRequest struct {
-	TopicID uint   `json:"topic_id"`
-	Replies []uint `json:"replies"`
+	TopicID   uint   `json:"topic_id"`
+	AnswerIDs []uint `json:"answer_ids"`
 }
 
 func CreateExperience(c *gin.Context) {
@@ -31,7 +31,7 @@ func CreateExperience(c *gin.Context) {
 	}
 
 	experience := models.Experience{}
-	err := experience.CreateWithReplies(req.TopicID, currentUser.(models.User).ID, req.Replies)
+	err := experience.CreateWithReplies(req.TopicID, currentUser.(models.User).ID, req.AnswerIDs)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
