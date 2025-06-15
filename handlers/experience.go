@@ -3,6 +3,7 @@ package handlers
 import (
 	"learning-api/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,4 +40,37 @@ func CreateExperience(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Experience and replies created successfully"})
+}
+
+func GetExperience(c *gin.Context) {
+	db := models.GetDB()
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid experience id"})
+		return
+	}
+
+	currentUser, exists := c.Get("currentUser")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	user := currentUser.(models.User)
+
+	var experience models.Experience
+	err = db.Preload("Replies").Preload("User").Preload("Topic.Questions.Answers").First(&experience, id).Error
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "experience not found"})
+		return
+	}
+
+	if experience.UserID != user.ID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: not your experience"})
+		return
+	}
+
+	experience.MarkCheckedAnswers()
+
+	c.JSON(http.StatusOK, experience)
 }

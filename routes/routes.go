@@ -9,6 +9,7 @@ import (
 
 func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
 	r.POST("/experiences", func(c *gin.Context) { handlers.CreateExperience(c) })
+	r.GET("/experience/:id", func(c *gin.Context) { handlers.GetExperience(c) })
 
 	r.GET("/topics", func(c *gin.Context) { handlers.ListTopics(c, db) })
 	r.POST("/topics", func(c *gin.Context) { handlers.CreateTopic(c, db) })

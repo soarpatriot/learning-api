@@ -13,10 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type mockUser struct {
-	ID uint
-}
-
 func setupTestRouterExperience() (*gin.Engine, *gorm.DB) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	db.AutoMigrate(&models.Experience{}, &models.Reply{}, &models.User{})
@@ -83,4 +79,108 @@ func TestCreateExperience_Unauthorized(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("Expected status 401, got %d", w.Code)
 	}
+}
+
+func TestGetExperience_Success(t *testing.T) {
+	r, _, _, _, answers := setupGetExperienceTestDB()
+	req, _ := http.NewRequest("GET", "/experience/11", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d", w.Code)
+	}
+	var resp struct {
+		ID    uint `json:"id"`
+		Topic struct {
+			Questions []struct {
+				Answers []struct {
+					ID      uint `json:"id"`
+					Checked bool `json:"checked"`
+				} `json:"answers"`
+			} `json:"questions"`
+		} `json:"topic"`
+	}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal response: %v", err)
+	}
+	if resp.ID != 11 {
+		t.Errorf("Expected experience ID 11, got %d", resp.ID)
+	}
+	// Check checked property
+	found := false
+	for _, q := range resp.Topic.Questions {
+		for _, a := range q.Answers {
+			if a.ID == answers[1].ID && a.Checked != true {
+				t.Errorf("Expected answer %d checked true", a.ID)
+			}
+			if a.ID == answers[0].ID && a.Checked != false {
+				t.Errorf("Expected answer %d checked false", a.ID)
+			}
+			if a.ID == answers[1].ID {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected answer with ID %d in response", answers[1].ID)
+	}
+}
+
+func TestGetExperience_Forbidden(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{})
+	models.SetDB(db)
+	user := models.User{ID: 1, Name: "testuser"}
+	db.Create(&user)
+	otherUser := models.User{ID: 2, Name: "other"}
+	db.Create(&otherUser)
+	topic := models.Topic{ID: 1, Name: "topic1"}
+	db.Create(&topic)
+	exp := models.Experience{ID: 12, TopicID: topic.ID, UserID: user.ID}
+	db.Create(&exp)
+	r := gin.Default()
+	r.GET("/experience/:id", func(c *gin.Context) {
+		c.Set("currentUser", otherUser)
+		GetExperience(c)
+	})
+	req, _ := http.NewRequest("GET", "/experience/12", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusForbidden {
+		t.Errorf("Expected 403, got %d", w.Code)
+	}
+}
+
+func setupGetExperienceTestDB() (*gin.Engine, *gorm.DB, models.User, models.Experience, []models.Answer) {
+	gin.SetMode(gin.TestMode)
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{})
+	models.SetDB(db)
+
+	user := models.User{ID: 1, Name: "testuser"}
+	db.Create(&user)
+	topic := models.Topic{ID: 1, Name: "topic1"}
+	db.Create(&topic)
+	question := models.Question{ID: 1, TopicID: topic.ID, Content: "q1"}
+	db.Create(&question)
+	answers := []models.Answer{
+		{ID: 1, QuestionID: question.ID, Content: "a1"},
+		{ID: 2, QuestionID: question.ID, Content: "a2"},
+	}
+	for _, a := range answers {
+		db.Create(&a)
+	}
+	exp := models.Experience{ID: 11, TopicID: topic.ID, UserID: user.ID}
+	db.Create(&exp)
+	reply := models.Reply{ExperienceID: exp.ID, AnswerID: 2}
+	db.Create(&reply)
+
+	r := gin.Default()
+	r.GET("/experience/:id", func(c *gin.Context) {
+		c.Set("currentUser", user)
+		GetExperience(c)
+	})
+	return r, db, user, exp, answers
 }

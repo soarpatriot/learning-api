@@ -13,6 +13,8 @@ type Experience struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	Replies   []Reply   `gorm:"foreignKey:ExperienceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"replies"`
+	User      User
+	Topic     Topic
 }
 
 func (e *Experience) CreateWithReplies(topicID uint, userID uint, answerIds []uint) error {
@@ -33,4 +35,21 @@ func (e *Experience) CreateWithReplies(topicID uint, userID uint, answerIds []ui
 		}
 		return nil
 	})
+}
+
+func (e *Experience) MarkCheckedAnswers() {
+	checkedMap := map[uint]struct{}{}
+	for _, reply := range e.Replies {
+		checkedMap[reply.AnswerID] = struct{}{}
+	}
+	for qi := range e.Topic.Questions {
+		for ai := range e.Topic.Questions[qi].Answers {
+			ans := &e.Topic.Questions[qi].Answers[ai]
+			if _, ok := checkedMap[ans.ID]; ok {
+				ans.Checked = true
+			} else {
+				ans.Checked = false
+			}
+		}
+	}
 }

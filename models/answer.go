@@ -10,4 +10,5 @@ type Answer struct {
 	QuestionID uint      `json:"question_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+	Checked    bool      `gorm:"-" json:"checked"`
 }

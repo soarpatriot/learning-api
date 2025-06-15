@@ -37,3 +37,38 @@ func TestExperience_CreateWithReplies_CreateError(t *testing.T) {
 	err := e.CreateWithReplies(10, 20, replies)
 	assert.Error(t, err)
 }
+
+func TestMarkCheckedAnswers(t *testing.T) {
+	e := &Experience{
+		Replies: []Reply{
+			{AnswerID: 2},
+			{AnswerID: 4},
+		},
+		Topic: Topic{
+			Questions: []Question{
+				{
+					Answers: []Answer{
+						{ID: 1},
+						{ID: 2},
+						{ID: 3},
+					},
+				},
+				{
+					Answers: []Answer{
+						{ID: 4},
+						{ID: 5},
+					},
+				},
+			},
+		},
+	}
+	e.MarkCheckedAnswers()
+
+	// Check first question answers
+	assert.False(t, e.Topic.Questions[0].Answers[0].Checked) // ID 1
+	assert.True(t, e.Topic.Questions[0].Answers[1].Checked)  // ID 2
+	assert.False(t, e.Topic.Questions[0].Answers[2].Checked) // ID 3
+	// Check second question answers
+	assert.True(t, e.Topic.Questions[1].Answers[0].Checked)  // ID 4
+	assert.False(t, e.Topic.Questions[1].Answers[1].Checked) // ID 5
+}
