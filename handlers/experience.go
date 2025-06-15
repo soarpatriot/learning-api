@@ -4,6 +4,7 @@ import (
 	"learning-api/models"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,7 +71,27 @@ func GetExperience(c *gin.Context) {
 		return
 	}
 
+	type experienceResponse struct {
+		ID        uint           `json:"id"`
+		TopicID   uint           `json:"topic_id"`
+		UserID    uint           `json:"user_id"`
+		CreatedAt time.Time      `json:"created_at"`
+		UpdatedAt time.Time      `json:"updated_at"`
+		Replies   []models.Reply `json:"replies"`
+		Topic     models.Topic   `json:"topic"`
+	}
+
 	experience.MarkCheckedAnswers()
 
-	c.JSON(http.StatusOK, experience)
+	resp := experienceResponse{
+		ID:        experience.ID,
+		TopicID:   experience.TopicID,
+		UserID:    experience.UserID,
+		CreatedAt: experience.CreatedAt,
+		UpdatedAt: experience.UpdatedAt,
+		Replies:   experience.Replies,
+		Topic:     experience.Topic,
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
