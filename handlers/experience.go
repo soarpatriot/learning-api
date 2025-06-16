@@ -95,3 +95,22 @@ func GetExperience(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
+func GetMyExperiences(c *gin.Context) {
+	db := models.GetDB()
+	currentUser, exists := c.Get("currentUser")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	user := currentUser.(models.User)
+
+	var experiences []models.Experience
+	err := db.Preload("Topic").Where("user_id = ?", user.ID).Find(&experiences).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, experiences)
+}

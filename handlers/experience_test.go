@@ -184,3 +184,53 @@ func setupGetExperienceTestDB() (*gin.Engine, *gorm.DB, models.User, models.Expe
 	})
 	return r, db, user, exp, answers
 }
+
+func TestGetMyExperiences(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Experience{})
+	models.SetDB(db)
+
+	user := models.User{ID: 1, Name: "testuser"}
+	db.Create(&user)
+	topic := models.Topic{ID: 1, Name: "topic1"}
+	db.Create(&topic)
+	exp1 := models.Experience{ID: 1, TopicID: topic.ID, UserID: user.ID}
+	exp2 := models.Experience{ID: 2, TopicID: topic.ID, UserID: user.ID}
+	db.Create(&exp1)
+	db.Create(&exp2)
+
+	r := gin.Default()
+	r.GET("/experiences/my", func(c *gin.Context) {
+		c.Set("currentUser", user)
+		GetMyExperiences(c)
+	})
+
+	req, _ := http.NewRequest("GET", "/experiences/my", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d", w.Code)
+	}
+
+	var resp []struct {
+		ID    uint `json:"id"`
+		Topic struct {
+			ID   uint   `json:"id"`
+			Name string `json:"name"`
+		} `json:"topic"`
+	}
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal response: %v", err)
+	}
+	if len(resp) != 2 {
+		t.Errorf("Expected 2 experiences, got %d", len(resp))
+	}
+	for _, e := range resp {
+		if e.Topic.ID != topic.ID || e.Topic.Name != topic.Name {
+			t.Errorf("Expected topic to be preloaded with correct data")
+		}
+	}
+}

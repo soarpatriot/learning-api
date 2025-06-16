@@ -9,6 +9,7 @@ type Topic struct {
 	Description  string     `json:"description"`
 	Explaination string     `json:"explaination"`
 	Questions    []Question `json:"questions"`
+	CoverURL     string     `gorm:"type:varchar(1000)" json:"cover_url"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    time.Time  `json:"updated_at"`
 }
