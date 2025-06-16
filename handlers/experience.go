@@ -112,5 +112,6 @@ func GetMyExperiences(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, experiences)
+	resp := models.ToMyExperienceResponses(experiences)
+	c.JSON(http.StatusOK, resp)
 }
