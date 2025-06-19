@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -16,6 +17,10 @@ import (
 func getDSN(cfg config.Config) string {
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.MySQLUserName, cfg.MySQLPassword, cfg.MySQLAddress, cfg.MySQLDB)
+}
+
+func init() {
+	_ = godotenv.Load() // Loads .env from project root if present
 }
 
 func main() {
