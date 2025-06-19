@@ -28,6 +28,7 @@ WORKDIR /app
 # Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
 COPY RapidSSLTLSRSACAG1.crt /usr/local/share/ca-certificates/RapidSSLTLSRSACAG1.crt
+COPY DigiCertGlobalRootCA.crt /usr/local/share/ca-certificates/DigiCertGlobalRootCA.crt
 RUN update-ca-certificates
 # Expose the default port
 EXPOSE 8000
