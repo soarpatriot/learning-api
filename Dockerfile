@@ -32,8 +32,8 @@ COPY DigiCertGlobalRootCA.crt /usr/local/share/ca-certificates/DigiCertGlobalRoo
 COPY dou.pem /usr/local/share/ca-certificates/dou.pem
 COPY dou.pem /usr/local/share/ca-certificates/dou.crt
 
-COPY douyin-chain /usr/local/share/ca-certificates/douyin-chain.pem
-COPY douyin-chain /usr/local/share/ca-certificates/douyin-chain.crt
+COPY douyin-chain.pem /usr/local/share/ca-certificates/douyin-chain.pem
+COPY douyin-chain.pem /usr/local/share/ca-certificates/douyin-chain.crt
 
 RUN update-ca-certificates
 # Expose the default port
