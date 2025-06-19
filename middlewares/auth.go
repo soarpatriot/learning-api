@@ -15,7 +15,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// skip the /refresh endpoint
-		if c.Request.URL.Path == "/refresh-token" || c.Request.URL.Path == "/login" || c.Request.URL.Path == "/token" || c.Request.URL.Path == "/health" || c.Request.URL.Path == "/ping" || c.Request.URL.Path == "/docs" {
+		if c.Request.URL.Path == "/refresh-token" || c.Request.URL.Path == "/login" || c.Request.URL.Path == "/token" || c.Request.URL.Path == "/health" || c.Request.URL.Path == "/ping" || c.Request.URL.Path == "/docs" || c.Request.URL.Path == "/pay/order" {
 			c.Next()
 			return
 		}

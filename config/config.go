@@ -16,6 +16,8 @@ type Config struct {
 	ClientSecret  string `yaml:"client_secret"`
 	AppID         string `yaml:"app_id"`
 	AppSecret     string `yaml:"app_secret"`
+	PrivateKey    string `yaml:"private_key"`
+	Salt          string `yaml:"salt"`
 }
 
 type yamlConfig struct {
@@ -75,6 +77,12 @@ func LoadConfig() Config {
 	}
 	if v := os.Getenv("APP_SECRET"); v != "" {
 		cfg.AppSecret = v
+	}
+	if v := os.Getenv("PRIVATE_KEY"); v != "" {
+		cfg.PrivateKey = v
+	}
+	if v := os.Getenv("SALT"); v != "" {
+		cfg.Salt = v
 	}
 
 	return cfg
