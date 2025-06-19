@@ -29,6 +29,7 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates
 COPY RapidSSLTLSRSACAG1.crt /usr/local/share/ca-certificates/RapidSSLTLSRSACAG1.crt
 COPY DigiCertGlobalRootCA.crt /usr/local/share/ca-certificates/DigiCertGlobalRootCA.crt
+COPY dou.pem /usr/local/share/ca-certificates/dou.pem
 RUN update-ca-certificates
 # Expose the default port
 EXPOSE 8000
