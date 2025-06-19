@@ -31,6 +31,10 @@ COPY RapidSSLTLSRSACAG1.crt /usr/local/share/ca-certificates/RapidSSLTLSRSACAG1.
 COPY DigiCertGlobalRootCA.crt /usr/local/share/ca-certificates/DigiCertGlobalRootCA.crt
 COPY dou.pem /usr/local/share/ca-certificates/dou.pem
 COPY dou.pem /usr/local/share/ca-certificates/dou.crt
+
+COPY douyin-chain /usr/local/share/ca-certificates/douyin-chain.pem
+COPY douyin-chain /usr/local/share/ca-certificates/douyin-chain.crt
+
 RUN update-ca-certificates
 # Expose the default port
 EXPOSE 8000
