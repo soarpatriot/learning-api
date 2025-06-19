@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -104,30 +105,30 @@ func PayOrderCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Payment callback received"})
 }
 
-// func PayDouOrder(c *gin.Context) {
-// 	cfg := config.LoadConfig()
-// 	var (
-// 		// 请求时间戳
-// 		timestamp = strconv.FormatInt(time.Now().Unix(), 10)
-// 		// 开发者填入自己的小程序app_id
-// 		appId = cfg.AppID
-// 		// 随机字符串
-// 		nonceStr = helpers.RandStr(10)
-// 		// 应用公钥版本,每次重新上传公钥后需要更新,可通过「开发管理-开发设置-密钥设置」处获取
-// 		keyVersion = "1"
-// 		// 应用私钥,用于加签 重要：1.测试时请修改为开发者自行生成的私钥;2.请勿将示例密钥用于生产环境;3.建议开发者不要将私钥文本写在代码中
-// 		privateKeyStr       = cfg.PrivateKey
-// 		privateKeyBase64Str = base64.StdEncoding.EncodeToString([]byte(privateKeyStr))
-// 		// 生成好的data
-// 		data = "{\"skuList\":[{\"skuId\":\"657\",\"price\":1,\"quantity\":1,\"title\":\"test_title\",\"imageList\":[\"https://xxxx.com/xxxxx.jpg\"],\"type\":301,\"tagGroupId\":\"tag_group_7272625659888058380\"}],\"outOrderNo\":\"test_out_order_no\",\"totalAmount\":1,\"payExpireSeconds\":300,\"orderEntrySchema\":{\"path\":\"\",\"params\":\"\"},\"payNotifyUrl\":\"https://xxxxx/xxx\"}"
-// 		//data = "{\"skuList\":[{\"skuId\":\"1\",\"price\":9999,\"quantity\":1,\"title\":\"标题\",\"imageList\":[\"https://dummyimage.com/234x60\"],\"type\":301,\"tagGroupId\":\"tag_group_7272625659888058380\"}],\"outOrderNo\":\"1213\",\"totalAmount\":9999,\"limitPayWayList\":[],\"payExpireSeconds\":3000,\"orderEntrySchema\":{\"path\":\"page/index/index\",\"params\":\"{\\\"poi\\\":\\\"6601248937917548558\\\",\\\"aweme_useTemplate\\\":1}\"}}"
-// 	)
-// 	byteAuthorization, err := helpers.GetByteAuthorization(privateKeyBase64Str, data, appId, nonceStr, timestamp, keyVersion)
-// 	if err != nil {
-// 		fmt.Println("getByteAuthorization err:", err)
-// 	} else {
-// 		fmt.Println("getByteAuthorization res:", byteAuthorization)
-// 	}
-// 	// return json response and { "auth": byteAuthorization.to_s}
-// 	c.JSON(http.StatusOK, gin.H{"auth": string(byteAuthorization)})
-// }
+func PayDouOrder(c *gin.Context) {
+	cfg := config.LoadConfig()
+	var (
+		// 请求时间戳
+		timestamp = strconv.FormatInt(time.Now().Unix(), 10)
+		// 开发者填入自己的小程序app_id
+		appId = cfg.AppID
+		// 随机字符串
+		nonceStr = helpers.RandStr(10)
+		// 应用公钥版本,每次重新上传公钥后需要更新,可通过「开发管理-开发设置-密钥设置」处获取
+		keyVersion = "1"
+		// 应用私钥,用于加签 重要：1.测试时请修改为开发者自行生成的私钥;2.请勿将示例密钥用于生产环境;3.建议开发者不要将私钥文本写在代码中
+		privateKeyStr       = cfg.PrivateKey
+		privateKeyBase64Str = base64.StdEncoding.EncodeToString([]byte(privateKeyStr))
+		// 生成好的data
+		data = "{\"skuList\":[{\"skuId\":\"657\",\"price\":1,\"quantity\":1,\"title\":\"test_title\",\"imageList\":[\"https://xxxx.com/xxxxx.jpg\"],\"type\":301,\"tagGroupId\":\"tag_group_7272625659888058380\"}],\"outOrderNo\":\"test_out_order_no\",\"totalAmount\":1,\"payExpireSeconds\":300,\"orderEntrySchema\":{\"path\":\"\",\"params\":\"\"},\"payNotifyUrl\":\"https://xxxxx/xxx\"}"
+		//data = "{\"skuList\":[{\"skuId\":\"1\",\"price\":9999,\"quantity\":1,\"title\":\"标题\",\"imageList\":[\"https://dummyimage.com/234x60\"],\"type\":301,\"tagGroupId\":\"tag_group_7272625659888058380\"}],\"outOrderNo\":\"1213\",\"totalAmount\":9999,\"limitPayWayList\":[],\"payExpireSeconds\":3000,\"orderEntrySchema\":{\"path\":\"page/index/index\",\"params\":\"{\\\"poi\\\":\\\"6601248937917548558\\\",\\\"aweme_useTemplate\\\":1}\"}}"
+	)
+	byteAuthorization, err := helpers.GetByteAuthorization(privateKeyBase64Str, data, appId, nonceStr, timestamp, keyVersion)
+	if err != nil {
+		fmt.Println("getByteAuthorization err:", err)
+	} else {
+		fmt.Println("getByteAuthorization res:", byteAuthorization)
+	}
+	// return json response and { "auth": byteAuthorization.to_s}
+	c.JSON(http.StatusOK, gin.H{"auth": string(byteAuthorization)})
+}

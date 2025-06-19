@@ -8,7 +8,7 @@ dev:
   client_secret: ""
   app_id: "tt02c1747c9dc91dcb01"
   app_secret: ""
-  private_key: ""
+  private_key: 
   salt: ""
 
 production:
