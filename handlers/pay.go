@@ -14,6 +14,9 @@ import (
 	"learning-api/config"
 	"learning-api/helpers"
 
+	"crypto/tls"
+	"crypto/x509"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -52,6 +55,18 @@ func RandString(n int) string {
 	return string(b)
 }
 
+func createSecureHTTPClient() (*http.Client, error) {
+	roots, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, err
+	}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{RootCAs: roots},
+	}
+	client := &http.Client{Transport: tr}
+	return client, nil
+}
+
 func PayOrder(c *gin.Context) {
 	var req PayOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -84,11 +99,25 @@ func PayOrder(c *gin.Context) {
 
 	jsonBody, _ := json.Marshal(order)
 	fmt.Println("Request Body:", string(jsonBody))
-	resp, err := http.Post(
+
+	client, err := createSecureHTTPClient()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create HTTP client"})
+		return
+	}
+
+	reqHttp, err := http.NewRequest(
+		"POST",
 		"https://developer.toutiao.com/api/apps/ecpay/v1/create_order",
-		"application/json",
 		bytes.NewBuffer(jsonBody),
 	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	reqHttp.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(reqHttp)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
