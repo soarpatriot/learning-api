@@ -67,6 +67,13 @@ func createSecureHTTPClient() (*http.Client, error) {
 	return client, nil
 }
 
+func createInsecureHTTPClient() *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	return &http.Client{Transport: tr}
+}
+
 func PayOrder(c *gin.Context) {
 	var req PayOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -100,11 +107,7 @@ func PayOrder(c *gin.Context) {
 	jsonBody, _ := json.Marshal(order)
 	fmt.Println("Request Body:", string(jsonBody))
 
-	client, err := createSecureHTTPClient()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create HTTP client"})
-		return
-	}
+	client := createInsecureHTTPClient()
 
 	reqHttp, err := http.NewRequest(
 		"POST",
