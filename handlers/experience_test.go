@@ -41,8 +41,13 @@ func TestCreateExperience_Success(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("Expected status 200, got %d", w.Code)
 	}
-	if !bytes.Contains(w.Body.Bytes(), []byte("Experience and replies created successfully")) {
-		t.Errorf("Expected success message, got %s", w.Body.String())
+	var resp models.MyExperienceResponse
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	if err != nil {
+		t.Errorf("Failed to unmarshal response: %v", err)
+	}
+	if resp.ID == 0 {
+		t.Errorf("Expected experience ID not equal 0, got %d", resp.ID)
 	}
 }
 

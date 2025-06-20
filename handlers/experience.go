@@ -40,7 +40,7 @@ func CreateExperience(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Experience and replies created successfully"})
+	c.JSON(http.StatusOK, experience)
 }
 
 func GetExperience(c *gin.Context) {
