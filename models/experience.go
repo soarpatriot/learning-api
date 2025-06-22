@@ -8,14 +8,14 @@ import (
 )
 
 type Experience struct {
-	ID        uint      `gorm:"primaryKey"`
-	TopicID   uint      `gorm:"not null"`
-	UserID    uint      `gorm:"not null"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	TopicID   uint      `gorm:"not null" json:"topic_id"`
+	UserID    uint      `gorm:"not null" json:"user_id"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Replies   []Reply   `gorm:"foreignKey:ExperienceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"replies"`
-	User      User
-	Topic     Topic
+	User      User      `json:"user"`
+	Topic     Topic     `json:"topic"`
 }
 
 func (e *Experience) CreateWithReplies(topicID uint, userID uint, answerIds []uint) error {
