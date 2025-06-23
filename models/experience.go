@@ -11,6 +11,7 @@ type Experience struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	TopicID   uint      `gorm:"not null" json:"topic_id"`
 	UserID    uint      `gorm:"not null" json:"user_id"`
+	Paid      bool      `gorm:"default:false" json:"paid"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Replies   []Reply   `gorm:"foreignKey:ExperienceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"replies"`
@@ -75,6 +76,7 @@ type MyExperienceResponse struct {
 	ID        uint      `json:"id"`
 	TopicID   uint      `json:"topic_id"`
 	UserID    uint      `json:"user_id"`
+	Paid      bool      `json:"paid"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Replies   []Reply   `json:"replies"`
@@ -89,6 +91,7 @@ func ToMyExperienceResponses(experiences []Experience) []MyExperienceResponse {
 			ID:        exp.ID,
 			TopicID:   exp.TopicID,
 			UserID:    exp.UserID,
+			Paid:      exp.Paid,
 			CreatedAt: exp.CreatedAt,
 			UpdatedAt: exp.UpdatedAt,
 			Replies:   exp.Replies,
