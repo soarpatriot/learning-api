@@ -42,7 +42,7 @@ type DouyinOrderRequest struct {
 }
 
 func randomOrderNo() string {
-	return "out_order_no_" + strconv.FormatInt(time.Now().UnixNano(), 36) + RandString(4)
+	return strconv.FormatInt(time.Now().UnixNano(), 36) + RandString(4)
 }
 
 func RandString(n int) string {
@@ -127,7 +127,20 @@ func PayOrder(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	c.Data(resp.StatusCode, "application/json", body)
+
+	// Parse the response to merge out_order_no
+	var douyinResponse map[string]interface{}
+	if err := json.Unmarshal(body, &douyinResponse); err != nil {
+		// If parsing fails, return original response
+		c.Data(resp.StatusCode, "application/json", body)
+		return
+	}
+
+	// Add out_order_no to the response
+	douyinResponse["out_order_no"] = orderNo
+
+	// Return the merged response
+	c.JSON(resp.StatusCode, douyinResponse)
 }
 
 func PayOrderCallback(c *gin.Context) {

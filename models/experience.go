@@ -11,12 +11,25 @@ type Experience struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	TopicID   uint      `gorm:"not null" json:"topic_id"`
 	UserID    uint      `gorm:"not null" json:"user_id"`
-	Paid      bool      `gorm:"default:false" json:"paid"`
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Replies   []Reply   `gorm:"foreignKey:ExperienceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"replies"`
+	Order     *Order    `gorm:"foreignKey:ExperienceID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"order"`
 	User      User      `json:"user"`
 	Topic     Topic     `json:"topic"`
+}
+
+// IsPaid returns true if there's an order with status paid or confirmed
+func (e *Experience) IsPaid() bool {
+	if e.Order != nil {
+		return e.Order.Status == OrderStatusPaid || e.Order.Status == OrderStatusConfirmed
+	}
+	return false
+}
+
+// Paid returns the paid status as a virtual property for JSON serialization
+func (e *Experience) Paid() bool {
+	return e.IsPaid()
 }
 
 func (e *Experience) CreateWithReplies(topicID uint, userID uint, answerIds []uint) error {
@@ -91,7 +104,7 @@ func ToMyExperienceResponses(experiences []Experience) []MyExperienceResponse {
 			ID:        exp.ID,
 			TopicID:   exp.TopicID,
 			UserID:    exp.UserID,
-			Paid:      exp.Paid,
+			Paid:      exp.Paid(),
 			CreatedAt: exp.CreatedAt,
 			UpdatedAt: exp.UpdatedAt,
 			Replies:   exp.Replies,

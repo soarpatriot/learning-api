@@ -42,7 +42,7 @@ func main() {
 		panic("failed to connect database")
 	}
 	models.SetDB(db)
-	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{}, &models.User{}, &models.Token{}, &models.Experience{}, &models.Reply{})
+	db.AutoMigrate(&models.Topic{}, &models.Question{}, &models.Answer{}, &models.User{}, &models.Token{}, &models.Experience{}, &models.Reply{}, &models.Order{})
 
 	port := os.Getenv("PORT")
 	if port == "" {

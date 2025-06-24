@@ -12,7 +12,7 @@ func InitTestDB() *gorm.DB {
 	if err != nil {
 		panic("failed to connect to test database")
 	}
-	database.AutoMigrate(&User{}, &Token{})
+	database.AutoMigrate(&User{}, &Token{}, &Order{})
 	return database
 }
 
