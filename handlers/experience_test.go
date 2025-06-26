@@ -87,7 +87,19 @@ func TestCreateExperience_Unauthorized(t *testing.T) {
 }
 
 func TestGetExperience_Success(t *testing.T) {
-	r, _, _, _, answers := setupGetExperienceTestDB()
+	r, db, user, exp, answers := setupGetExperienceTestDB()
+
+	// Create a paid order for the experience
+	order := models.Order{
+		UserID:       user.ID,
+		ExperienceID: exp.ID,
+		Price:        1000,
+		Status:       models.OrderStatusPaid,
+		OrderNo:      "ORD20250624001",
+		OutOrderNo:   "PAY20250624001",
+	}
+	db.Create(&order)
+
 	req, _ := http.NewRequest("GET", "/experience/11", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
@@ -96,6 +108,14 @@ func TestGetExperience_Success(t *testing.T) {
 	}
 	var resp struct {
 		ID    uint `json:"id"`
+		Paid  bool `json:"paid"`
+		Order *struct {
+			ID         uint   `json:"id"`
+			Price      int    `json:"price"`
+			Status     string `json:"status"`
+			OrderNo    string `json:"order_no"`
+			OutOrderNo string `json:"out_order_no"`
+		} `json:"order"`
 		Topic struct {
 			Questions []struct {
 				Answers []struct {
@@ -112,6 +132,30 @@ func TestGetExperience_Success(t *testing.T) {
 	if resp.ID != 11 {
 		t.Errorf("Expected experience ID 11, got %d", resp.ID)
 	}
+
+	// Test the paid status
+	if resp.Paid != true {
+		t.Errorf("Expected experience to be paid, got %v", resp.Paid)
+	}
+
+	// Test the order details
+	if resp.Order == nil {
+		t.Errorf("Expected order to be included in response")
+	} else {
+		if resp.Order.Price != 1000 {
+			t.Errorf("Expected order price 1000, got %d", resp.Order.Price)
+		}
+		if resp.Order.Status != "paid" {
+			t.Errorf("Expected order status 'paid', got %s", resp.Order.Status)
+		}
+		if resp.Order.OrderNo != "ORD20250624001" {
+			t.Errorf("Expected order number 'ORD20250624001', got %s", resp.Order.OrderNo)
+		}
+		if resp.Order.OutOrderNo != "PAY20250624001" {
+			t.Errorf("Expected out order number 'PAY20250624001', got %s", resp.Order.OutOrderNo)
+		}
+	}
+
 	// Check checked property
 	found := false
 	for _, q := range resp.Topic.Questions {
@@ -135,7 +179,7 @@ func TestGetExperience_Success(t *testing.T) {
 func TestGetExperience_Forbidden(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{}, &models.Order{})
 	models.SetDB(db)
 	user := models.User{ID: 1, Name: "testuser"}
 	db.Create(&user)
@@ -161,7 +205,7 @@ func TestGetExperience_Forbidden(t *testing.T) {
 func setupGetExperienceTestDB() (*gin.Engine, *gorm.DB, models.User, models.Experience, []models.Answer) {
 	gin.SetMode(gin.TestMode)
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{})
+	db.AutoMigrate(&models.User{}, &models.Topic{}, &models.Question{}, &models.Answer{}, &models.Experience{}, &models.Reply{}, &models.Order{})
 	models.SetDB(db)
 
 	user := models.User{ID: 1, Name: "testuser"}

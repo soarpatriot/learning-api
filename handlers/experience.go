@@ -60,7 +60,7 @@ func GetExperience(c *gin.Context) {
 	user := currentUser.(models.User)
 
 	var experience models.Experience
-	err = db.Preload("Replies").Preload("User").Preload("Topic.Questions.Answers").First(&experience, id).Error
+	err = db.Preload("Replies").Preload("User").Preload("Order").Preload("Topic.Questions.Answers").First(&experience, id).Error
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "experience not found"})
 		return
@@ -79,6 +79,8 @@ func GetExperience(c *gin.Context) {
 		UpdatedAt time.Time      `json:"updated_at"`
 		Replies   []models.Reply `json:"replies"`
 		Topic     models.Topic   `json:"topic"`
+		Paid      bool           `json:"paid"`
+		Order     *models.Order  `json:"order"`
 	}
 
 	experience.MarkCheckedAnswers()
@@ -91,6 +93,8 @@ func GetExperience(c *gin.Context) {
 		UpdatedAt: experience.UpdatedAt,
 		Replies:   experience.Replies,
 		Topic:     experience.Topic,
+		Paid:      experience.Paid(),
+		Order:     experience.Order,
 	}
 
 	c.JSON(http.StatusOK, resp)
